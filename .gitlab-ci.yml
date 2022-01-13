@@ -1,0 +1,9 @@
+stages:
+    - test
+
+python-3.8:
+  stage: test
+  image: containers.ligo.org/lscsoft/bilby/v2-bilby-python38
+  script:
+    - python -m pip install .
+    - pytest
