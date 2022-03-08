@@ -5,9 +5,13 @@ import numpy as np
 from bilby.gw.detector import get_empty_interferometer, InterferometerList
 from bilby_cython import geometry
 
-from old_code import (
-    antenna_response, get_polarization_tensor, get_polarization_tensor_multiple_modes,
-    time_delay_geocentric, zenith_azimuth_to_theta_phi
+from .old_code import (
+    antenna_response,
+    calculate_arm,
+    get_polarization_tensor,
+    get_polarization_tensor_multiple_modes,
+    time_delay_geocentric,
+    zenith_azimuth_to_theta_phi,
 )
 
 
@@ -33,6 +37,15 @@ class TestGeometry(unittest.TestCase):
                 max_diff = max(max_diff, abs(numpy_delay - cython_delay))
         self.assertLess(max_diff, 1e-6)
 
+    def test_time_delay_from_geocenter_matches_time_delay_geocentric(self):
+        geocenter = np.zeros(3)
+        for ifo in self.ifos:
+            detector = get_empty_interferometer(ifo).vertex
+            for point in np.random.uniform(0, np.pi / 2, (1000, 3)):
+                geocentric = geometry.time_delay_geocentric(detector, geocenter, *point)
+                from_geocenter = geometry.time_delay_from_geocenter(detector, *point)
+                self.assertEqual(from_geocenter, geocentric)
+
     def test_get_polarization_tensor(self):
         max_diff = 0
         for ra, dec, time, psi in np.random.uniform(0, np.pi / 2, (100, 4)):
@@ -51,6 +64,10 @@ class TestGeometry(unittest.TestCase):
             cython_tensors = geometry.get_polarization_tensor_multiple_modes(*args)
             max_diff = abs(np.max(np.array(numpy_tensors) - np.array(cython_tensors)))
         self.assertLess(max_diff, 1e-8)
+
+    def test_polarization_tensor_bad_mode_raises_error(self):
+        with self.assertRaises(ValueError):
+            _ = geometry.get_polarization_tensor(0.0, 0.0, 0.0, 0.0, "bad_mode")
 
     def test_antenna_reponse(self):
         def _cython_antenna_response(detector_tensor, *args):
@@ -80,3 +97,18 @@ class TestGeometry(unittest.TestCase):
                 cython_result = geometry.zenith_azimuth_to_theta_phi(*point, delta_x)
                 max_diff = max(max_diff, np.max(abs(np.array(numpy_result) - np.array(cython_result))))
         self.assertLess(max_diff, 1e-6)
+
+    def test_calculate_arm(self):
+        max_diff = 0
+        for point in np.random.uniform(0, 2 * np.pi, (1000, 4)):
+            print(geometry.calculate_arm(*point), calculate_arm(*point))
+            max_diff = max(max_diff, np.linalg.norm(
+                geometry.calculate_arm(*point) - calculate_arm(*point)
+            ))
+        self.assertLess(max_diff, 1e-10)
+
+    def test_detector_tensor(self):
+        for xx, yy in np.random.uniform(0, 1, (1000, 2, 3)):
+            numpy_tensor = 0.5 * (np.einsum('i,j->ij', xx, xx) - np.einsum('i,j->ij', yy, yy))
+            cython_tensor = geometry.detector_tensor(xx, yy)
+            self.assertTrue(np.array_equal(numpy_tensor, cython_tensor))
