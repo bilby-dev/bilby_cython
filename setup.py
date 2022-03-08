@@ -76,7 +76,7 @@ def get_requirements():
     return requirements
 
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 version_file = write_version_file(VERSION)
 
 extensions = [
@@ -100,9 +100,10 @@ setup(
     cmdclass={"build_ext": build_ext},
     description="Optimized functionality for Bilby",
     ext_modules=extensions,
-    install_requires=["numpy"],
+    install_requires=["numpy", "cython"],
     license="MIT",
     long_description=get_long_description(),
+    long_description_content_type='text/markdown',
     name="bilby.cython",
     packages=["bilby_cython"],
     package_data=dict(bilby_cython=[version_file]),
