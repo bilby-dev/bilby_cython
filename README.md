@@ -1,3 +1,6 @@
+[![pipeline status](https://git.ligo.org/colm.talbot/bilby-cython/badges/master/pipeline.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/pipelines)
+[![coverage report](https://git.ligo.org/colm.talbot/bilby-cython/badges/master/coverage.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/commits/master)
+
 # bilby-cython
 
 Optimized `cython` implementations of specific `Bilby` operations.
