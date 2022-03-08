@@ -1,19 +1,20 @@
 stages:
     - test
+    - deploy
 
 variables:
-  PRIMARY_VERSION: 38
+  PRIMARY_VERSION: "3.9"
   IMAGE_ROOT: "python"
   PRIMARY_IMAGE: $IMAGE_ROOT$PRIMARY_VERSION
-
 
 unit-tests:
   stage: test
   parallel:
     matrix:
-      - PY_VERSION: [ "3.8", "3.9" ]
+      - PY_VERSION: [ "3.8", "3.9", "3.10" ]
   image: $IMAGE_ROOT:$PY_VERSION
   before_script:
+    - python -m pip install --upgrade pip setuptools
     - python -m pip install Cython numpy
     - python -m pip install pytest-cov
     - python -m pip install bilby
@@ -32,3 +33,20 @@ unit-tests:
       - htmlcov_$PY_VERSION/
       - coverage.xml
     expire_in: 30 days
+
+
+pypi-release:
+  stage: deploy
+  image: $PRIMARY_IMAGE
+  variables:
+    TWINE_USERNAME: $PYPI_USERNAME
+    TWINE_PASSWORD: $PYPI_PASSWORD
+  before_script:
+    - python -m pip install --upgrade pip setuptools
+    - python -m pip install twine
+    - python -m pip install Cython numpy
+    - python setup.py sdist
+  script:
+    - twine upload dist/*
+  only:
+    - tags
