@@ -1,11 +1,24 @@
 stages:
-    - test
-    - deploy
+  - initial
+  - test
+  - deploy
 
 variables:
   PRIMARY_VERSION: "3.9"
   IMAGE_ROOT: "python"
-  PRIMARY_IMAGE: $IMAGE_ROOT$PRIMARY_VERSION
+  PRIMARY_IMAGE: $IMAGE_ROOT:$PRIMARY_VERSION
+
+
+basic:
+  stage: initial
+  image: $PRIMARY_IMAGE
+  before_script:
+    - python -m pip install --upgrade pip setuptools
+    - python -m pip install Cython numpy
+  script:
+    - python setup.py clean --all build_ext --force --inplace --debug
+    - python -c "import bilby_cython"
+    - python -c "import bilby_cython.geometry"
 
 unit-tests:
   stage: test
