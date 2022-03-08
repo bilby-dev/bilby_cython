@@ -1,5 +1,6 @@
-[![pipeline status](https://git.ligo.org/colm.talbot/bilby-cython/badges/master/pipeline.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/pipelines)
-[![coverage report](https://git.ligo.org/colm.talbot/bilby-cython/badges/master/coverage.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/commits/master)
+[![pipeline status](https://git.ligo.org/colm.talbot/bilby-cython/badges/main/pipeline.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/commits/main)
+[![coverage report](https://git.ligo.org/colm.talbot/bilby-cython/badges/main/coverage.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/commits/main)
+[![Latest Release](https://git.ligo.org/colm.talbot/bilby-cython/-/badges/release.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/releases)
 
 # bilby-cython
 
