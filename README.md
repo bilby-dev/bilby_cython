@@ -10,6 +10,15 @@ functions.
 Most of the speed up comes from leveraging the fact that these are operations
 of 3-element vectors.
 
+## Usage
+
+In order to use the functions implemented here you can import them from the
+`bilby.cython package`
+```python
+from bilby_cython import geometry
+geometry.get_polarization_tensor(ra=0.0, dec=0.0, time=0.0, psi=0.0, mode="plus")
+```
+
 ## Ported functions
 
 - `time_delay_geocentric`: calculating time delays between two interferometers

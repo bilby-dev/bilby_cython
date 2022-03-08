@@ -1,4 +1,4 @@
-#cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True
+# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True, linetrace=True
 
 import numpy as np
 cimport numpy as np
@@ -77,28 +77,6 @@ cpdef time_delay_from_geocenter(np.ndarray detector1, double ra, double dec, dou
 
     """
     return time_delay_geocentric(detector1, _GEOCENTER, ra, dec, time)
-
-
-cdef three_by_three_outer(double[:] x_view, double[:] y_view, double[:, :] output_view):
-    """
-    Compute the outer product of two three-element vectors
-
-    Parameters
-    ----------
-    x_view: array_like
-        Memory view of first input vector
-    y_view: array_like
-        Memory view of second input vector
-    output_view: array_like
-        Memory view of output 2d-array
-
-    Returns
-    -------
-
-    """
-    for ii in range(3):
-        for jj in range(3):
-            output_view[ii, jj] = x_view[ii] * y_view[jj]
 
 
 cdef _vectors_for_polarization_tensor(double phi, double theta, double psi):

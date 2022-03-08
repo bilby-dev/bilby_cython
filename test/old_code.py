@@ -4,6 +4,20 @@ import numpy as np
 from lal import GreenwichMeanSiderealTime
 
 
+def calculate_arm(arm_tilt, arm_azimuth, longitude, latitude):
+    """
+    Pulled from bilby v1.1.5
+    """
+    e_long = np.array([-np.sin(longitude), np.cos(longitude), 0])
+    e_lat = np.array([-np.sin(latitude) * np.cos(longitude),
+                      -np.sin(latitude) * np.sin(longitude), np.cos(latitude)])
+    e_h = np.array([np.cos(latitude) * np.cos(longitude),
+                    np.cos(latitude) * np.sin(longitude), np.sin(latitude)])
+
+    return (np.cos(arm_tilt) * np.cos(arm_azimuth) * e_long +
+            np.cos(arm_tilt) * np.sin(arm_azimuth) * e_lat +
+            np.sin(arm_tilt) * e_h)
+
 def time_delay_geocentric(detector1, detector2, ra, dec, time):
     """
     Copied from Bilby v1.1.4.
