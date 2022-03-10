@@ -54,7 +54,8 @@ unit-tests:
   # install wheel
   - ${PYTHON} -m venv test
   - source test/bin/activate
-  - python -m pip install --upgrade pip setuptools
+  # test with the most recent version of numpy
+  - python -m pip install --upgrade pip setuptools numpy
   # change directory to ensure bilby_cython is not in the path twice
   - cd wheelhouse
   - python -m pip install *
@@ -67,10 +68,11 @@ unit-tests:
   - ${PYTHON} -m venv env
   - source env/bin/activate
   - python -m pip install --upgrade pip setuptools wheel $FIXER
-  - python -m pip install numpy Cython
+  # build with oldest supported version of numpy for the python version
+  - python -m pip install oldest-supported-numpy Cython
 
 .build-wheel: &build-wheel
-  - python -m pip wheel -v --wheel-dir=wheel .
+  - python -m pip wheel -v --wheel-dir=wheel --no-deps .
 
 # job template for wheel builds
 .wheel:
