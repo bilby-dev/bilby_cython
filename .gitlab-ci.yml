@@ -1,6 +1,7 @@
 stages:
   - initial
   - test
+  - wheels
   - deploy
 
 variables:
@@ -47,6 +48,88 @@ unit-tests:
       - coverage.xml
     expire_in: 30 days
 
+# do some simple sanity checks in a virtualenv
+.wheel-test: &wheel-test
+  - rm -rf wheel/build/
+  # install wheel
+  - ${PYTHON} -m venv test
+  - source test/bin/activate
+  - python -m pip install --upgrade pip setuptools
+  # change directory to ensure bilby_cython is not in the path twice
+  - cd wheelhouse
+  - python -m pip install *
+  - python -m pip show bilby.cython
+  - python -m pip check bilby.cython
+  - python -c "import bilby_cython"
+  - python -c "from bilby_cython import geometry; print(geometry.calculate_arm(0.0, 0.0, 0.0, 0.0))"
+
+.setup-build-env: &setup-build-env
+  - ${PYTHON} -m venv env
+  - source env/bin/activate
+  - python -m pip install --upgrade pip setuptools wheel $FIXER
+  - python -m pip install numpy Cython
+
+.build-wheel: &build-wheel
+  - python -m pip wheel -v --wheel-dir=wheel .
+
+# job template for wheel builds
+.wheel:
+  stage: wheels
+  parallel:
+    matrix:
+      - PY_VERSION: [ "38", "39", "310" ]
+  except:
+    variables:
+      # allow these jobs to be skipped by including
+      # `[skip wheels]` in the commit message
+      - $CI_COMMIT_MESSAGE =~ /\[skip wheels\]/
+  artifacts:
+    expire_in: 18h
+    paths:
+      - wheelhouse
+
+# Build receipe for standalone wheels on Linux
+.wheel:manylinux:
+  extends:
+    - .wheel
+  variables:
+    FIXER: auditwheel
+  before_script:
+    - export PYTHON="/opt/python/cp${PY_VERSION}-cp${PY_VERSION}/bin/python"
+    - *setup-build-env
+  script:
+    - *build-wheel
+    # Bundle and fix up dependent shared libraries
+    - auditwheel repair wheel/bilby.cython*.whl
+    - *wheel-test
+
+    # Build receipe for standalone wheels on macOS
+wheel:macosx:
+  extends:
+    - .wheel
+  tags:
+    - macos_catalina_x86_64
+  variables:
+    FIXER: delocate
+  before_script:
+    - . /opt/local/share/macports/setupenv.bash
+    - PYTHON=$(which python$(echo ${CI_JOB_NAME} | sed 's/.*\[\([0-9]\)\([0-9]\{1,\}\).*/\1.\2/'))
+    - *setup-build-env
+  script:
+    - *build-wheel
+    # Bundle and fix up dependent shared libraries
+    - delocate-wheel -v -w wheelhouse wheel/bilby.cython*.whl
+    - *wheel-test
+  only:
+    # don't run macos wheel jobs from manually-triggered pipelines
+    - tags
+    - schedules
+
+# Build wheels for all supported platforms
+wheel:manylinux2014:
+  extends:
+    - .wheel:manylinux
+  image: containers.ligo.org/lscsoft/lalsuite-manylinux/manylinux2014_x86_64
 
 pypi-release:
   stage: deploy
@@ -54,12 +137,15 @@ pypi-release:
   variables:
     TWINE_USERNAME: $PYPI_USERNAME
     TWINE_PASSWORD: $PYPI_PASSWORD
+  needs:
+    - wheel:manylinux2014
+    - wheel:macosx
   before_script:
+    # exit if we're not running in the main namespace
+    - if [[ ${CI_PROJECT_PATH} != "colm.talbot/bilby-cython" ]]; then echo "Not deploying."; exit 0; fi
     - python -m pip install --upgrade pip setuptools
     - python -m pip install twine
-    - python -m pip install Cython numpy
-    - python setup.py sdist
   script:
-    - twine upload dist/*
+    - twine upload wheelhouse/*
   only:
     - tags

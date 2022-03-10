@@ -100,7 +100,7 @@ setup(
     cmdclass={"build_ext": build_ext},
     description="Optimized functionality for Bilby",
     ext_modules=extensions,
-    install_requires=["numpy", "cython"],
+    install_requires=["numpy"],
     license="MIT",
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
@@ -109,5 +109,6 @@ setup(
     package_data=dict(bilby_cython=[version_file]),
     python_requires=f">={min_python_version_str}",
     setup_requires=["numpy", "cython"],
+    url="https://git.ligo.org/colm.talbot/bilby-cython",
     version=VERSION,
 )
