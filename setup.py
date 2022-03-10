@@ -76,7 +76,7 @@ def get_requirements():
     return requirements
 
 
-VERSION = "0.1.3"
+VERSION = "0.1.4"
 version_file = write_version_file(VERSION)
 
 extensions = [
