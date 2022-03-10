@@ -134,9 +134,6 @@ wheel:manylinux2014:
 pypi-release:
   stage: deploy
   image: $PRIMARY_IMAGE
-  variables:
-    TWINE_USERNAME: $PYPI_USERNAME
-    TWINE_PASSWORD: $PYPI_PASSWORD
   needs:
     - wheel:manylinux2014
     - wheel:macosx
@@ -146,6 +143,6 @@ pypi-release:
     - python -m pip install --upgrade pip setuptools
     - python -m pip install twine
   script:
-    - twine upload wheelhouse/*
+    - twine upload --verbose --skip-existing wheelhouse/*
   only:
     - tags
