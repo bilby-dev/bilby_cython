@@ -9,6 +9,17 @@ variables:
   IMAGE_ROOT: "python"
   PRIMARY_IMAGE: $IMAGE_ROOT:$PRIMARY_VERSION
 
+.install-local: &install-local
+  - python -m pip install --debug -vv -e .
+
+.build-wheel: &build-wheel
+  - python -m pip wheel -v --wheel-dir=wheel --no-deps .
+
+.basic-tests: &basic-tests
+  - python -m pip show bilby.cython
+  - python -m pip check bilby.cython
+  - python -c "import bilby_cython"
+  - python -c "from bilby_cython import geometry; print(geometry.calculate_arm(0.0, 0.0, 0.0, 0.0))"
 
 basic:
   stage: initial
@@ -17,9 +28,8 @@ basic:
     - python -m pip install --upgrade pip setuptools
     - python -m pip install Cython numpy
   script:
-    - python setup.py clean --all build_ext --force --inplace --debug
-    - python -c "import bilby_cython"
-    - python -c "import bilby_cython.geometry"
+    - *install-local
+    - *basic-tests
 
 unit-tests:
   stage: test
@@ -34,7 +44,7 @@ unit-tests:
     - python -m pip install bilby
     - python -m pip install lalsuite
   script:
-    - python setup.py clean --all build_ext --force --inplace --debug
+    - *install-local
     - pytest . --cov=bilby_cython
   after_script:
     - coverage html
@@ -59,10 +69,7 @@ unit-tests:
   # change directory to ensure bilby_cython is not in the path twice
   - cd wheelhouse
   - python -m pip install *
-  - python -m pip show bilby.cython
-  - python -m pip check bilby.cython
-  - python -c "import bilby_cython"
-  - python -c "from bilby_cython import geometry; print(geometry.calculate_arm(0.0, 0.0, 0.0, 0.0))"
+  - *basic-tests
 
 .setup-build-env: &setup-build-env
   - ${PYTHON} -m venv env
@@ -70,9 +77,6 @@ unit-tests:
   - python -m pip install --upgrade pip setuptools wheel $FIXER
   # build with oldest supported version of numpy for the python version
   - python -m pip install oldest-supported-numpy Cython
-
-.build-wheel: &build-wheel
-  - python -m pip wheel -v --wheel-dir=wheel --no-deps .
 
 # job template for wheel builds
 .wheel:
@@ -133,6 +137,28 @@ wheel:manylinux2014:
     - .wheel:manylinux
   image: containers.ligo.org/lscsoft/lalsuite-manylinux/manylinux2014_x86_64
 
+build-dist:
+  stage: wheels
+  image: $PRIMARY_IMAGE
+  except:
+    variables:
+      # allow these jobs to be skipped by including
+      # `[skip wheels]` in the commit message
+      - $CI_COMMIT_MESSAGE =~ /\[skip wheels\]/
+  before_script:
+    - export PYTHON=python
+    - *setup-build-env
+  script:
+    - python setup.py sdist --verbose
+    - python -m pip install --debug -vv dist/*
+    # import tests won't work in the base directory as we don't build in place
+    - cd test
+    - *basic-tests
+  artifacts:
+    expire_in: 18h
+    paths:
+      - dist
+
 pypi-release:
   stage: deploy
   image: $PRIMARY_IMAGE
@@ -145,6 +171,6 @@ pypi-release:
     - python -m pip install --upgrade pip setuptools
     - python -m pip install twine
   script:
-    - twine upload --verbose --skip-existing wheelhouse/*
+    - twine upload --verbose --skip-existing wheelhouse/* dist/*
   only:
     - tags
