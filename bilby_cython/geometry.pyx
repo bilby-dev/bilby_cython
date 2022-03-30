@@ -1,5 +1,3 @@
-# cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True, linetrace=True
-
 import numpy as np
 cimport numpy as np
 from libc.math cimport sin, cos, fmod, pi, acos, atan2, atan, pow
