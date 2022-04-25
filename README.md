@@ -1,6 +1,8 @@
 [![pipeline status](https://git.ligo.org/colm.talbot/bilby-cython/badges/main/pipeline.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/commits/main)
 [![coverage report](https://git.ligo.org/colm.talbot/bilby-cython/badges/main/coverage.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/commits/main)
 [![Latest Release](https://git.ligo.org/colm.talbot/bilby-cython/-/badges/release.svg)](https://git.ligo.org/colm.talbot/bilby-cython/-/releases)
+[![Conda Forge](https://anaconda.org/conda-forge/bilby.cython/badges/version.svg)](https://anaconda.org/conda-forge/bilby.cython)
+[![License](https://anaconda.org/conda-forge/bilby.cython/badges/license.svg)](https://anaconda.org/conda-forge/bilby.cython)
 
 # bilby-cython
 
@@ -13,6 +15,17 @@ This repo provides optimized `cython` implementations of the existing `Python`
 functions.
 Most of the speed up comes from leveraging the fact that these are operations
 of 3-element vectors.
+
+## Installation
+
+`bilby.cython` is available through `conda-forge` and `pypi` and can be installed with either of the following
+
+```console
+$ conda install -c conda-forge bilby.cython
+$ python -m pip install bilby.cython
+```
+
+There are prebuilt versions for many architectures/OSs, however, non-standard systems will require a version of `Cython` to build from the source with
 
 ## Usage
 
