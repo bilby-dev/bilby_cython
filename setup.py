@@ -86,12 +86,6 @@ def get_long_description():
     return long_description
 
 
-def get_requirements():
-    with open("requirements.txt", "r") as ff:
-        requirements = ff.readlines()
-    return requirements
-
-
 VERSION = "0.1.4"
 version_file = write_version_file(VERSION)
 
@@ -124,7 +118,7 @@ setup(
     cmdclass={"build_ext": LazyImportBuildExtCmd},
     description="Optimized functionality for Bilby",
     ext_modules=extensions,
-    install_requires=["numpy"],
+    install_requires=["numpy", "lalsuite"],
     license="MIT",
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
