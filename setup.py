@@ -124,9 +124,12 @@ setup(
     long_description_content_type='text/markdown',
     name="bilby.cython",
     packages=["bilby_cython"],
-    package_data=dict(bilby_cython=[version_file, "*.pyx"]),
+    package_data=dict(bilby_cython=["*.pyx"]),
     python_requires=f">={min_python_version_str}",
-    setup_requires=["numpy", "cython"],
+    setup_requires=["numpy", "cython", "setuptools_scm"],
     url="https://git.ligo.org/colm.talbot/bilby-cython",
-    version=VERSION,
+    use_scm_version={
+        "write_to": "bilby_cython/_version.py",
+        "local_scheme": "dirty-tag",
+    },
 )
