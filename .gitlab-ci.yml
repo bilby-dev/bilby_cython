@@ -53,9 +53,12 @@ unit-tests:
     - coverage html
     - mv htmlcov htmlcov_$PY_VERSION
     - coverage xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
-      cobertura: coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
     paths:
       - htmlcov_$PY_VERSION/
       - coverage.xml
