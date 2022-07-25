@@ -86,7 +86,7 @@ def get_long_description():
     return long_description
 
 
-VERSION = "0.1.4"
+VERSION = "0.2.0"
 version_file = write_version_file(VERSION)
 
 if os.environ.get("CYTHON_COVERAGE"):
