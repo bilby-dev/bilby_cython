@@ -17,6 +17,7 @@ MANIFEST
 *.log
 *.dat
 *.version
+*_version.py
 *.ipynb_checkpoints
 outdir/*
 .idea/*

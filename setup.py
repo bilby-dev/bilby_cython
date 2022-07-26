@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 
 import numpy as np
@@ -39,45 +38,6 @@ class LazyImportBuildExtCmd(build_ext):
         super(LazyImportBuildExtCmd, self).finalize_options()
 
 
-def write_version_file(version):
-    """Writes a file with version information to be used at run time
-
-    Parameters
-    ----------
-    version: str
-        A string containing the current version information
-
-    Returns
-    -------
-    version_file: str
-        A path to the version file
-
-    """
-    try:
-        git_log = subprocess.check_output(
-            ["git", "log", "-1", "--pretty=%h %ai"]
-        ).decode("utf-8")
-        git_diff = (
-            subprocess.check_output(["git", "diff", "."])
-            + subprocess.check_output(["git", "diff", "--cached", "."])
-        ).decode("utf-8")
-        if git_diff == "":
-            git_status = "(CLEAN) " + git_log
-        else:
-            git_status = "(UNCLEAN) " + git_log
-    except Exception as e:
-        print(f"Unable to obtain git version information, exception: {e}")
-        git_status = "release"
-
-    version_file = ".version"
-    long_version_file = f"bilby_cython/{version_file}"
-    if os.path.isfile(long_version_file) is False:
-        with open(long_version_file, "w+") as f:
-            f.write(f"{version}: {git_status}")
-
-    return version_file
-
-
 def get_long_description():
     """Finds the README and reads in the description"""
     here = os.path.abspath(os.path.dirname(__file__))
@@ -85,9 +45,6 @@ def get_long_description():
         long_description = f.read()
     return long_description
 
-
-VERSION = "0.2.0"
-version_file = write_version_file(VERSION)
 
 if os.environ.get("CYTHON_COVERAGE"):
     macros = [
@@ -128,8 +85,5 @@ setup(
     python_requires=f">={min_python_version_str}",
     setup_requires=["numpy", "cython", "setuptools_scm"],
     url="https://git.ligo.org/colm.talbot/bilby-cython",
-    use_scm_version={
-        "write_to": "bilby_cython/_version.py",
-        "local_scheme": "dirty-tag",
-    },
+    use_scm_version={"write_to": "bilby_cython/_version.py"},
 )
