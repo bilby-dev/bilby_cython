@@ -1,7 +1,6 @@
 from math import fmod
 
 import numpy as np
-from lal import GreenwichMeanSiderealTime
 
 
 def calculate_arm(arm_tilt, arm_azimuth, longitude, latitude):
@@ -17,6 +16,7 @@ def calculate_arm(arm_tilt, arm_azimuth, longitude, latitude):
     return (np.cos(arm_tilt) * np.cos(arm_azimuth) * e_long +
             np.cos(arm_tilt) * np.sin(arm_azimuth) * e_lat +
             np.sin(arm_tilt) * e_h)
+
 
 def time_delay_geocentric(detector1, detector2, ra, dec, time):
     """
@@ -44,6 +44,7 @@ def time_delay_geocentric(detector1, detector2, ra, dec, time):
     float: Time delay between the two detectors in the geocentric frame
 
     """
+    from lal import GreenwichMeanSiderealTime
     speed_of_light = 299792458.0
     gmst = fmod(GreenwichMeanSiderealTime(time), 2 * np.pi)
     phi = ra - gmst
@@ -82,6 +83,7 @@ def get_polarization_tensor(ra, dec, time, psi, mode):
     array_like: A 3x3 representation of the polarization_tensor for the specified mode.
 
     """
+    from lal import GreenwichMeanSiderealTime
     gmst = fmod(GreenwichMeanSiderealTime(time), 2 * np.pi)
     phi = ra - gmst
     theta = np.pi / 2 - dec
@@ -195,3 +197,9 @@ def zenith_azimuth_to_theta_phi(zenith, azimuth, delta_x):
     theta = np.arccos(omega[2])
     phi = np.arctan2(omega[1], omega[0]) % (2 * np.pi)
     return theta, phi
+
+
+def greenwich_mean_sidereal_time(time):
+    from lal import GreenwichMeanSiderealTime
+    time = float(time)
+    return GreenwichMeanSiderealTime(time)
