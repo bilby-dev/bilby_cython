@@ -1,6 +1,7 @@
 import numpy as np
 cimport numpy as np
 from libc.math cimport sin, cos, fmod, pi, acos, atan2, atan, pow
+from .time import greenwich_mean_sidereal_time
 
 cdef double CC = 299792458.0
 
@@ -28,12 +29,11 @@ cpdef time_delay_geocentric(np.ndarray detector1, np.ndarray detector2, double r
     float: Time delay between the two detectors in the geocentric frame
 
     """
-    import lal
     cdef double output, gmst, theta, phi, sintheta, costheta, sinphi, cosphi
     cdef double[:] detector_1_view = detector1
     cdef double[:] detector_2_view = detector2
 
-    gmst = fmod(lal.GreenwichMeanSiderealTime(time), 2 * pi)
+    gmst = fmod(greenwich_mean_sidereal_time(time), 2 * pi)
     phi = ra - gmst
     theta = pi / 2 - dec
     sintheta = sin(theta)
@@ -180,12 +180,11 @@ cpdef get_polarization_tensor(double ra, double dec, double time, double psi, st
     array_like: A 3x3 representation of the polarization_tensor for the specified mode.
 
     """
-    import lal
     cdef double gmst, phi, theta
     output = np.zeros((3, 3))
     cdef double[:, :] output_view = output
 
-    gmst = fmod(lal.GreenwichMeanSiderealTime(time), 2 * pi)
+    gmst = fmod(greenwich_mean_sidereal_time(time), 2 * pi)
     phi = ra - gmst
     theta = pi / 2 - dec
     _vectors_for_polarization_tensor(phi, theta, psi)
@@ -223,12 +222,11 @@ cpdef get_polarization_tensor_multiple_modes(double ra, double dec, double time,
     array_like: A 3x3 representation of the polarization_tensor for the specified mode.
 
     """
-    import lal
     cdef double gmst, phi, theta
     cdef double[:, :] output_view
     output = list()
 
-    gmst = fmod(lal.GreenwichMeanSiderealTime(time), 2 * pi)
+    gmst = fmod(greenwich_mean_sidereal_time(time), 2 * pi)
     phi = ra - gmst
     theta = pi / 2 - dec
     _vectors_for_polarization_tensor(phi, theta, psi)

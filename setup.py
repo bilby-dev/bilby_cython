@@ -60,6 +60,12 @@ extensions = [
         include_dirs=[np.get_include()],
         define_macros=macros,
     ),
+    Extension(
+        "bilby_cython.time",
+        ["bilby_cython/time.pyx"],
+        include_dirs=[np.get_include()],
+        define_macros=macros,
+    ),
 ]
 
 setup(
@@ -75,7 +81,7 @@ setup(
     cmdclass={"build_ext": LazyImportBuildExtCmd},
     description="Optimized functionality for Bilby",
     ext_modules=extensions,
-    install_requires=["numpy", "lalsuite"],
+    install_requires=["numpy"],
     license="MIT",
     long_description=get_long_description(),
     long_description_content_type='text/markdown',

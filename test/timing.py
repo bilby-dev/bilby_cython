@@ -4,11 +4,14 @@ import numpy as np
 
 from bilby.gw.detector import InterferometerList
 from bilby_cython import geometry
+from bilby_cython.time import greenwich_mean_sidereal_time
 from old_code import (
-    antenna_response, get_polarization_tensor,
+    antenna_response,
+    get_polarization_tensor,
     get_polarization_tensor_multiple_modes,
+    greenwich_mean_sidereal_time as gmst_old,
     time_delay_geocentric,
-    zenith_azimuth_to_theta_phi
+    zenith_azimuth_to_theta_phi,
 )
 
 ifos = InterferometerList(["H1", "L1"])
@@ -127,3 +130,18 @@ cython_time = (stop - start) / len(points)
 
 print(f"Timing frame conversion calculation over {len(points)} trials.")
 print(f"Cython time: {cython_time:.3e}\nNumpy time: {numpy_time:.3e}")
+
+times = np.random.uniform(1000000000, 1000100000, 10000)
+start = time.time()
+for tt in times:
+    gmst_old(tt)
+stop = time.time()
+lal_time = (stop - start) / len(times)
+start = time.time()
+for tt in times:
+    greenwich_mean_sidereal_time(tt)
+stop = time.time()
+cython_time = (stop - start) / len(times)
+
+print(f"Timing GMST calculation over {len(points)} trials.")
+print(f"Cython time: {cython_time:.3e}\nLAL time: {lal_time:.3e}")

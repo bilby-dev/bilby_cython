@@ -20,6 +20,7 @@ variables:
   - python -m pip check bilby.cython
   - python -c "import bilby_cython"
   - python -c "from bilby_cython import geometry; print(geometry.calculate_arm(0.0, 0.0, 0.0, 0.0))"
+  - python -c "from bilby_cython import time; print(time.greenwich_mean_sidereal_time(1335623903.0))"
 
 basic:
   stage: initial
@@ -27,7 +28,6 @@ basic:
   before_script:
     - python -m pip install --upgrade pip setuptools
     - python -m pip install Cython numpy
-    - python -m pip install lalsuite
   script:
     - *install-local
     - *basic-tests
@@ -41,10 +41,9 @@ unit-tests:
   before_script:
     - python -m pip install --upgrade pip setuptools
     - python -m pip install Cython numpy
-    - python -m pip install lalsuite
     - python -m pip install pytest-cov
     - python -m pip install bilby
-    - python -m pip install lalsuite
+    - python -m pip install lalsuite astropy
   script:
     - export CYTHON_COVERAGE=1
     - *install-local
@@ -72,7 +71,6 @@ unit-tests:
   - source test/bin/activate
   # test with the most recent version of numpy
   - python -m pip install --upgrade pip setuptools numpy
-  - python -m pip install lalsuite
     # change directory to ensure bilby_cython is not in the path twice
   - cd wheelhouse
   - python -m pip install *
@@ -84,7 +82,6 @@ unit-tests:
   - python -m pip install --upgrade pip setuptools wheel $FIXER
   # build with oldest supported version of numpy for the python version
   - python -m pip install oldest-supported-numpy Cython
-  - python -m pip install lalsuite
 
 # job template for wheel builds
 .wheel:
@@ -171,6 +168,7 @@ pypi-release:
   stage: deploy
   image: $PRIMARY_IMAGE
   needs:
+    - build-dist
     - wheel:manylinux2014
     - wheel:macosx
   before_script:
