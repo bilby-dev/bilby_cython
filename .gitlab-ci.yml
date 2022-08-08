@@ -63,6 +63,30 @@ unit-tests:
       - coverage.xml
     expire_in: 30 days
 
+pages:
+  stage: test
+  image: $PRIMARY_IMAGE
+  before_script:
+    - python -m pip install --upgrade pip setuptools
+    - python -m pip install Cython numpy
+    - python -m pip install nbsphinx numpydoc sphinx-tabs sphinx_rtd_theme
+    - python -m pip install -e .
+  script:
+    - cd docs
+    - make clean
+    - make html
+    - cd ..
+    - mv docs/_build/html public
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  only:
+    - master
+    - tags
+    - schedules
+
+
 # do some simple sanity checks in a virtualenv
 .wheel-test: &wheel-test
   - rm -rf wheel/build/
