@@ -91,10 +91,9 @@ class TestGeometry(unittest.TestCase):
             if ifo_pair[0] == ifo_pair[1]:
                 continue
             ifos = InterferometerList(ifo_pair)
-            delta_x = ifos[0].vertex - ifos[1].vertex
             for point in np.random.uniform(0, np.pi / 2, (100, 2)):
-                numpy_result = zenith_azimuth_to_theta_phi(*point, delta_x)
-                cython_result = geometry.zenith_azimuth_to_theta_phi(*point, delta_x)
+                numpy_result = zenith_azimuth_to_theta_phi(*point, ifos[0].vertex, ifos[1].vertex)
+                cython_result = geometry.zenith_azimuth_to_theta_phi(*point, ifos[0].vertex, ifos[1].vertex)
                 max_diff = max(max_diff, np.max(abs(np.array(numpy_result) - np.array(cython_result))))
         self.assertLess(max_diff, 1e-6)
 

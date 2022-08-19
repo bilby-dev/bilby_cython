@@ -170,7 +170,7 @@ def euler_rotation(delta_x):
     return total_rotation
 
 
-def zenith_azimuth_to_theta_phi(zenith, azimuth, delta_x):
+def zenith_azimuth_to_theta_phi(zenith, azimuth, ifo_1, ifo_2):
     """
     Convert from the 'detector frame' to the Earth frame.
 
@@ -188,11 +188,15 @@ def zenith_azimuth_to_theta_phi(zenith, azimuth, delta_x):
     theta, phi: float
         The zenith and azimuthal angles in the earth frame.
     """
+    delta_x = ifo_1 - ifo_2
+    midpoint = (ifo_1 + ifo_2) / 2
+    rotation_matrix = euler_rotation(delta_x)
+    temp = rotation_matrix.T @ midpoint
+    azimuth -= np.arctan2(temp[0], temp[1])
     omega_prime = np.array([
         np.sin(zenith) * np.cos(azimuth),
         np.sin(zenith) * np.sin(azimuth),
         np.cos(zenith)])
-    rotation_matrix = euler_rotation(delta_x)
     omega = np.dot(rotation_matrix, omega_prime)
     theta = np.arccos(omega[2])
     phi = np.arctan2(omega[1], omega[0]) % (2 * np.pi)

@@ -452,7 +452,7 @@ cdef euler_rotation(double[:] delta_x, double[:, :] rotation):
     rotation[2][2] = cos_beta
 
 
-cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delta_x):
+cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray ifo_1, np.ndarray ifo_2):
     """
     Convert from the 'detector frame' to the Earth frame.
 
@@ -462,8 +462,10 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
         The zenith angle in the detector frame
     azimuth: float
         The azimuthal angle in the detector frame
-    delta_x: array_like
-        The separation vector for the two detectors defining the frame
+    ifo_1: array_like
+        The vertex of the first interferometer
+    ifo_2: array_like
+        The vertex of the first interferometer
 
     Returns
     =======
@@ -471,18 +473,31 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
         The zenith and azimuthal angles in the earth frame.
     """
     rotation_matrix = np.empty((3, 3))
+    delta_x = ifo_1 - ifo_2
+    midpoint = (ifo_1 + ifo_2) / 2
     cdef double sin_azimuth, cos_azimuth
     cdef double sin_zenith, cos_zenith
     cdef double[:] delta_
+    cdef double[:] midpoint_
     cdef double[:, :] rotation_
+    delta_ = delta_x
+    midpoint_ = midpoint
+    rotation_ = rotation_matrix
+    euler_rotation(delta_, rotation_)
+
+    azimuth -= atan2(
+        rotation_[0][0] * midpoint_[0]
+        + rotation_[1][0] * midpoint_[1]
+        + rotation_[2][0] * midpoint_[2],
+        rotation_[0][1] * midpoint_[0]
+        + rotation_[1][1] * midpoint_[1]
+        + rotation_[2][1] * midpoint_[2],
+    )
+
     sin_azimuth = sin(azimuth)
     cos_azimuth = cos(azimuth)
     sin_zenith = sin(zenith)
     cos_zenith = cos(zenith)
-
-    delta_ = delta_x
-    rotation_ = rotation_matrix
-    euler_rotation(delta_, rotation_)
 
     theta = acos(
         rotation_[2][0] * sin_zenith * cos_azimuth

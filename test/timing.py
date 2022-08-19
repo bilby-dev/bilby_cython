@@ -114,17 +114,19 @@ print(f"Cython time: {cython_time:.3e}\nNumpy time: {numpy_time:.3e}")
 
 points = np.random.uniform(0, np.pi, (1000, 2))
 delta_x = ifos[1].geometry.vertex - ifos[0].geometry.vertex
+ifo_1 = ifos[0].geometry.vertex
+ifo_2 = ifos[1].geometry.vertex
 # burn a numpy evaluation for caching
-zenith_azimuth_to_theta_phi(*points[0], delta_x)
+zenith_azimuth_to_theta_phi(*points[0], ifo_1, ifo_2)
 
 start = time.time()
 for point in points:
-    zenith_azimuth_to_theta_phi(*point, delta_x)
+    zenith_azimuth_to_theta_phi(*point, ifo_1, ifo_2)
 stop = time.time()
 numpy_time = (stop - start) / len(points)
 start = time.time()
 for point in points:
-    geometry.zenith_azimuth_to_theta_phi(*point, delta_x)
+    geometry.zenith_azimuth_to_theta_phi(*point, ifo_1, ifo_2)
 stop = time.time()
 cython_time = (stop - start) / len(points)
 
