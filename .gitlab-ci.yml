@@ -19,8 +19,8 @@ variables:
   - python -m pip show bilby.cython
   - python -m pip check bilby.cython
   - python -c "import bilby_cython"
-  - python -c "from bilby_cython import geometry; print(geometry.calculate_arm(0.0, 0.0, 0.0, 0.0))"
-  - python -c "from bilby_cython import time; print(time.greenwich_mean_sidereal_time(1335623903.0))"
+  - python -c "from bilby_cython import geometry"
+  - python -c "from bilby_cython import time"
 
 basic:
   stage: initial
@@ -47,7 +47,7 @@ unit-tests:
   script:
     - export CYTHON_COVERAGE=1
     - *install-local
-    - pytest . --cov=bilby_cython
+    - python -m pytest --pyargs bilby_cython.test --cov=bilby_cython
   after_script:
     - coverage html
     - mv htmlcov htmlcov_$PY_VERSION
@@ -181,7 +181,7 @@ build-dist:
     - python setup.py sdist --verbose
     - python -m pip install --debug -vv dist/*
     # import tests won't work in the base directory as we don't build in place
-    - cd test
+    - cd ../
     - *basic-tests
   artifacts:
     expire_in: 18h
