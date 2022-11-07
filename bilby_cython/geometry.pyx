@@ -462,7 +462,7 @@ cpdef rotation_matrix_from_delta(delta_x):
     """
     cdef double[:] delta
     cdef double[:, :] rotation_
-    rotation = np.zeros((3, 3))
+    rotation = np.empty((3, 3))
     delta = delta_x
     rotation_ = rotation
     euler_rotation(delta, rotation_)
