@@ -414,29 +414,29 @@ cdef euler_rotation(double[:] delta_x, double[:, :] rotation):
     This is decomposed into three Euler angles, alpha, beta, gamma, which rotate
     about the z-, y-, and z- axes respectively.
     """
-    cdef double alpha, beta, gamma, norm
+    cdef double alpha, gamma, norm
     cdef double cos_alpha, sin_alpha, cos_beta, sin_beta, cos_gamma, sin_gamma
 
     norm = pow(delta_x[0] * delta_x[0] + delta_x[1] * delta_x[1] + delta_x[2] * delta_x[2], 0.5)
-    alpha = atan(- delta_x[1] * delta_x[2] / delta_x[0] / norm)
-    beta = acos(delta_x[2] / norm)
-    gamma = atan(delta_x[1] / delta_x[0])
+    cos_beta = delta_x[2] / norm
+    sin_beta = pow(1 - cos_beta**2, 0.5)
+
+    alpha = atan2(- delta_x[1] * cos_beta, delta_x[0])
+    gamma = atan2(delta_x[1], delta_x[0])
 
     cos_alpha = cos(alpha)
     sin_alpha = sin(alpha)
-    cos_beta = cos(beta)
-    sin_beta = sin(beta)
     cos_gamma = cos(gamma)
     sin_gamma = sin(gamma)
 
     rotation[0][0] = cos_alpha * cos_beta * cos_gamma - sin_alpha * sin_gamma
     rotation[1][0] = cos_alpha * cos_beta * sin_gamma + sin_alpha * cos_gamma
-    rotation[2][0] = cos_alpha * sin_beta
+    rotation[2][0] = -cos_alpha * sin_beta
     rotation[0][1] = -sin_alpha * cos_beta * cos_gamma - cos_alpha * sin_gamma
     rotation[1][1] = -sin_alpha * cos_beta * sin_gamma + cos_alpha * cos_gamma
-    rotation[2][1] = -sin_alpha * sin_beta
-    rotation[0][2] = -sin_beta * cos_gamma
-    rotation[1][2] = -sin_beta * sin_gamma
+    rotation[2][1] = sin_alpha * sin_beta
+    rotation[0][2] = sin_beta * cos_gamma
+    rotation[1][2] = sin_beta * sin_gamma
     rotation[2][2] = cos_beta
 
 
