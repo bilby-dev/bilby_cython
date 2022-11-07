@@ -411,7 +411,41 @@ cdef euler_rotation(double[:] delta_x, double[:, :] rotation):
     Calculate the rotation matrix mapping the vector (0, 0, 1) to delta_x
     while preserving the origin of the azimuthal angle.
 
-    This is decomposed into three Euler angle, alpha, beta, gamma, which rotate
+    This is decomposed into three Euler angles, alpha, beta, gamma, which rotate
+    about the z-, y-, and z- axes respectively.
+    """
+    cdef double alpha, gamma, norm
+    cdef double cos_alpha, sin_alpha, cos_beta, sin_beta, cos_gamma, sin_gamma
+
+    norm = pow(delta_x[0] * delta_x[0] + delta_x[1] * delta_x[1] + delta_x[2] * delta_x[2], 0.5)
+    cos_beta = delta_x[2] / norm
+    sin_beta = pow(1 - cos_beta**2, 0.5)
+
+    alpha = atan2(- delta_x[1] * cos_beta, delta_x[0])
+    gamma = atan2(delta_x[1], delta_x[0])
+
+    cos_alpha = cos(alpha)
+    sin_alpha = sin(alpha)
+    cos_gamma = cos(gamma)
+    sin_gamma = sin(gamma)
+
+    rotation[0][0] = cos_alpha * cos_beta * cos_gamma - sin_alpha * sin_gamma
+    rotation[1][0] = cos_alpha * cos_beta * sin_gamma + sin_alpha * cos_gamma
+    rotation[2][0] = -cos_alpha * sin_beta
+    rotation[0][1] = -sin_alpha * cos_beta * cos_gamma - cos_alpha * sin_gamma
+    rotation[1][1] = -sin_alpha * cos_beta * sin_gamma + cos_alpha * cos_gamma
+    rotation[2][1] = sin_alpha * sin_beta
+    rotation[0][2] = sin_beta * cos_gamma
+    rotation[1][2] = sin_beta * sin_gamma
+    rotation[2][2] = cos_beta
+
+
+cpdef rotation_matrix_from_delta(delta_x):
+    """
+    Calculate the rotation matrix mapping the vector (0, 0, 1) to delta_x
+    while preserving the origin of the azimuthal angle.
+
+    This is decomposed into three Euler angles, alpha, beta, gamma, which rotate
     about the z-, y-, and z- axes respectively.
 
     Parameters
@@ -426,30 +460,13 @@ cdef euler_rotation(double[:] delta_x, double[:, :] rotation):
         Rotation matrix which maps vectors from the frame in which delta_x is
         aligned with the z-axis to the target frame.
     """
-    cdef double alpha, beta, gamma, norm
-    cdef double cos_alpha, sin_alpha, cos_beta, sin_beta, cos_gamma, sin_gamma
-
-    norm = pow(delta_x[0] * delta_x[0] + delta_x[1] * delta_x[1] + delta_x[2] * delta_x[2], 0.5)
-    alpha = atan(- delta_x[1] * delta_x[2] / delta_x[0] / norm)
-    beta = acos(delta_x[2] / norm)
-    gamma = atan(delta_x[1] / delta_x[0])
-
-    cos_alpha = cos(alpha)
-    sin_alpha = sin(alpha)
-    cos_beta = cos(beta)
-    sin_beta = sin(beta)
-    cos_gamma = cos(gamma)
-    sin_gamma = sin(gamma)
-
-    rotation[0][0] = cos_alpha * cos_beta * cos_gamma - sin_alpha * sin_gamma
-    rotation[1][0] = cos_alpha * cos_beta * sin_gamma + sin_alpha * cos_gamma
-    rotation[2][0] = cos_alpha * sin_beta
-    rotation[0][1] = -sin_alpha * cos_beta * cos_gamma - cos_alpha * sin_gamma
-    rotation[1][1] = -sin_alpha * cos_beta * sin_gamma + cos_alpha * cos_gamma
-    rotation[2][1] = -sin_alpha * sin_beta
-    rotation[0][2] = -sin_beta * cos_gamma
-    rotation[1][2] = -sin_beta * sin_gamma
-    rotation[2][2] = cos_beta
+    cdef double[:] delta
+    cdef double[:, :] rotation_
+    rotation = np.empty((3, 3))
+    delta = delta_x
+    rotation_ = rotation
+    euler_rotation(delta, rotation_)
+    return rotation
 
 
 cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delta_x):
@@ -470,7 +487,7 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
     theta, phi: float
         The zenith and azimuthal angles in the earth frame.
     """
-    rotation_matrix = np.empty((3, 3))
+    rotation = np.empty((3, 3))
     cdef double sin_azimuth, cos_azimuth
     cdef double sin_zenith, cos_zenith
     cdef double[:] delta_
@@ -481,7 +498,7 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
     cos_zenith = cos(zenith)
 
     delta_ = delta_x
-    rotation_ = rotation_matrix
+    rotation_ = rotation
     euler_rotation(delta_, rotation_)
 
     theta = acos(

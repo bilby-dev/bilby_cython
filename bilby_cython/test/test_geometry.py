@@ -92,6 +92,11 @@ class TestGeometry(unittest.TestCase):
                 continue
             ifos = InterferometerList(ifo_pair)
             delta_x = ifos[0].vertex - ifos[1].vertex
+            # there is a bug in the python implementation for separations
+            # lying in specific quadrants for arctan2 due to using arctan
+            # the direct tests of the rotation matrix are more rigorous
+            sign_incorrect = abs(np.arctan2(delta_x[1], delta_x[0])) < np.pi / 2
+            delta_x *= (-1)**sign_incorrect
             for point in np.random.uniform(0, np.pi / 2, (100, 2)):
                 numpy_result = zenith_azimuth_to_theta_phi(*point, delta_x)
                 cython_result = geometry.zenith_azimuth_to_theta_phi(*point, delta_x)
@@ -112,3 +117,14 @@ class TestGeometry(unittest.TestCase):
             numpy_tensor = 0.5 * (np.einsum('i,j->ij', xx, xx) - np.einsum('i,j->ij', yy, yy))
             cython_tensor = geometry.detector_tensor(xx, yy)
             self.assertTrue(np.array_equal(numpy_tensor, cython_tensor))
+
+    def test_rotation_matrix_transpose_is_inverse(self):
+        for delta_x in np.random.uniform(0, 1, (100, 3)):
+            rotation = geometry.rotation_matrix_from_delta(delta_x)
+            self.assertTrue(np.allclose(rotation.T @ rotation, np.eye(3)))
+
+    def test_rotation_matrix_maps_delta_x_to_z_axis(self):
+        for delta_x in np.random.uniform(0, 1, (100, 3)):
+            rotation = geometry.rotation_matrix_from_delta(delta_x)
+            delta_x /= np.linalg.norm(delta_x)
+            self.assertTrue(np.allclose(rotation.T @ delta_x, np.array([0, 0, 1])))
