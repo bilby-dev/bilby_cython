@@ -114,12 +114,12 @@ class TestGeometry(unittest.TestCase):
             self.assertTrue(np.array_equal(numpy_tensor, cython_tensor))
 
     def test_rotation_matrix_transpose_is_inverse(self):
-        for delta_x in np.random.uniform(0, 1, (3, 100)):
+        for delta_x in np.random.uniform(0, 1, (100, 3)):
             rotation = geometry.rotation_matrix_from_delta(delta_x)
             self.assertTrue(np.allclose(rotation.T @ rotation, np.eye(3)))
 
     def test_rotation_matrix_maps_delta_x_to_z_axis(self):
-        for delta_x in np.random.uniform(0, 1, (3, 100)):
+        for delta_x in np.random.uniform(0, 1, (100, 3)):
             rotation = geometry.rotation_matrix_from_delta(delta_x)
             delta_x /= np.linalg.norm(delta_x)
             self.assertTrue(np.allclose(rotation.T @ delta_x, np.array([0, 0, 1])))
