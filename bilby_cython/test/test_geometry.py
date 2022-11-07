@@ -92,6 +92,11 @@ class TestGeometry(unittest.TestCase):
                 continue
             ifos = InterferometerList(ifo_pair)
             delta_x = ifos[0].vertex - ifos[1].vertex
+            # there is a bug in the python implementation for separations
+            # lying in specific quadrants for arctan2 due to using arctan
+            # the direct tests of the rotation matrix are more rigorous
+            sign_incorrect = abs(np.arctan2(delta_x[1], delta_x[0])) < np.pi / 2
+            delta_x *= (-1)**sign_incorrect
             for point in np.random.uniform(0, np.pi / 2, (100, 2)):
                 numpy_result = zenith_azimuth_to_theta_phi(*point, delta_x)
                 cython_result = geometry.zenith_azimuth_to_theta_phi(*point, delta_x)
