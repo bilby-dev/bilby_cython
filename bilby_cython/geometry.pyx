@@ -411,20 +411,8 @@ cdef euler_rotation(double[:] delta_x, double[:, :] rotation):
     Calculate the rotation matrix mapping the vector (0, 0, 1) to delta_x
     while preserving the origin of the azimuthal angle.
 
-    This is decomposed into three Euler angle, alpha, beta, gamma, which rotate
+    This is decomposed into three Euler angles, alpha, beta, gamma, which rotate
     about the z-, y-, and z- axes respectively.
-
-    Parameters
-    ==========
-    delta_x: array-like (3,)
-        Vector onto which (0, 0, 1) should be mapped.
-    rotation: array-like (3,3)
-
-    Returns
-    =======
-    total_rotation: array-like (3,3)
-        Rotation matrix which maps vectors from the frame in which delta_x is
-        aligned with the z-axis to the target frame.
     """
     cdef double alpha, beta, gamma, norm
     cdef double cos_alpha, sin_alpha, cos_beta, sin_beta, cos_gamma, sin_gamma
@@ -452,6 +440,35 @@ cdef euler_rotation(double[:] delta_x, double[:, :] rotation):
     rotation[2][2] = cos_beta
 
 
+cpdef rotation_matrix_from_delta(delta_x):
+    """
+    Calculate the rotation matrix mapping the vector (0, 0, 1) to delta_x
+    while preserving the origin of the azimuthal angle.
+
+    This is decomposed into three Euler angles, alpha, beta, gamma, which rotate
+    about the z-, y-, and z- axes respectively.
+
+    Parameters
+    ==========
+    delta_x: array-like (3,)
+        Vector onto which (0, 0, 1) should be mapped.
+    rotation: array-like (3,3)
+
+    Returns
+    =======
+    total_rotation: array-like (3,3)
+        Rotation matrix which maps vectors from the frame in which delta_x is
+        aligned with the z-axis to the target frame.
+    """
+    cdef double[:] delta
+    cdef double[:, :] rotation_
+    rotation = np.zeros((3, 3))
+    delta = delta_x
+    rotation_ = rotation
+    euler_rotation(delta, rotation_)
+    return rotation
+
+
 cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delta_x):
     """
     Convert from the 'detector frame' to the Earth frame.
@@ -470,7 +487,7 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
     theta, phi: float
         The zenith and azimuthal angles in the earth frame.
     """
-    rotation_matrix = np.empty((3, 3))
+    rotation = np.empty((3, 3))
     cdef double sin_azimuth, cos_azimuth
     cdef double sin_zenith, cos_zenith
     cdef double[:] delta_
@@ -481,7 +498,7 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
     cos_zenith = cos(zenith)
 
     delta_ = delta_x
-    rotation_ = rotation_matrix
+    rotation_ = rotation
     euler_rotation(delta_, rotation_)
 
     theta = acos(

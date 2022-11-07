@@ -112,3 +112,12 @@ class TestGeometry(unittest.TestCase):
             numpy_tensor = 0.5 * (np.einsum('i,j->ij', xx, xx) - np.einsum('i,j->ij', yy, yy))
             cython_tensor = geometry.detector_tensor(xx, yy)
             self.assertTrue(np.array_equal(numpy_tensor, cython_tensor))
+
+    def test_rotation_matrix_transpose_is_inverse(self):
+        for delta_x in np.random.uniform(0, 1, (3, 100)):
+            self.assertTrue(np.allclose(euler(delta_x).T @ euler(delta_x), np.eye(3)))
+
+    def test_rotation_matrix_maps_delta_x_to_z_axis(self):
+        for delta_x in np.random.uniform(0, 1, (3, 100)):
+            delta_x /= np.linalg.norm(delta_x)
+            self.assertTrue(np.allclose(euler(delta_x).T @ delta_x, np.array([0, 0, 1])))
