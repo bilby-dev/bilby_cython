@@ -2,7 +2,7 @@ import os
 import sys
 
 import numpy as np
-from setuptools import Extension, setup
+from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
 
 
@@ -86,7 +86,7 @@ setup(
     long_description=get_long_description(),
     long_description_content_type='text/markdown',
     name="bilby.cython",
-    packages=["bilby_cython"],
+    packages=find_packages(),
     package_data=dict(bilby_cython=["*.pyx"]),
     python_requires=f">={min_python_version_str}",
     setup_requires=["numpy", "cython", "setuptools_scm"],
