@@ -1,0 +1,37 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "setuptools_scm[toml]>=3.4.3",
+    "wheel",
+    "cython",
+    "numpy"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "bilby_cython/_version.py"
+
+[project]
+name = "bilby.cython"
+authors = [{name = "Colm Talbot", email = "colm.talbot@ligo.org"}]
+description = "Optimized functionality for Bilby"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+license = {text = "MIT"}
+dependencies = ["numpy"]
+readme = "README.md"
+urls = {Homepage = "https://git.ligo.org/colm.talbot/bilby-cython"}
+dynamic = ["version"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+bilby_cython = ["*.pyx"]

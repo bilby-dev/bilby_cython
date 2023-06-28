@@ -27,7 +27,6 @@ basic:
   image: $PRIMARY_IMAGE
   before_script:
     - python -m pip install --upgrade pip setuptools
-    - python -m pip install Cython numpy
   script:
     - *install-local
     - *basic-tests
@@ -36,7 +35,7 @@ unit-tests:
   stage: test
   parallel:
     matrix:
-      - PY_VERSION: [ "3.8", "3.9", "3.10" ]
+      - PY_VERSION: [ "3.8", "3.9", "3.10", "3.11" ]
   image: $IMAGE_ROOT:$PY_VERSION
   before_script:
     - python -m pip install --upgrade pip setuptools
@@ -103,7 +102,7 @@ pages:
 .setup-build-env: &setup-build-env
   - ${PYTHON} -m venv env
   - source env/bin/activate
-  - python -m pip install --upgrade pip setuptools wheel $FIXER
+  - python -m pip install --upgrade pip setuptools wheel build $FIXER
   # build with oldest supported version of numpy for the python version
   - python -m pip install oldest-supported-numpy Cython
 
@@ -112,7 +111,7 @@ pages:
   stage: wheels
   parallel:
     matrix:
-      - PY_VERSION: [ "38", "39", "310" ]
+      - PY_VERSION: [ "38", "39", "310", "311" ]
   except:
     variables:
       # allow these jobs to be skipped by including
@@ -178,7 +177,7 @@ build-dist:
     - export PYTHON=python
     - *setup-build-env
   script:
-    - python setup.py sdist --verbose
+    - python -m build . --sdist
     - python -m pip install --debug -vv dist/*
     # import tests won't work in the base directory as we don't build in place
     - cd ../
