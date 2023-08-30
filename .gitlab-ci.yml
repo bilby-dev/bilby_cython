@@ -142,7 +142,7 @@ wheel:macosx:
   extends:
     - .wheel
   tags:
-    - macos_catalina_x86_64
+    - macos_monterey_x86_64
   variables:
     FIXER: delocate
   before_script:
