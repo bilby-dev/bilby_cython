@@ -23,7 +23,7 @@ def set_backend(backend: str) -> None:
 
 
 def __getattr__(name: str) -> object:
-    if name == "geometry":
+    if name in ["geometry", "time"]:
         import importlib
         return importlib.import_module(f"bilby_cython.{BACKEND}.{name}")
     elif name == "__version__":
