@@ -2,6 +2,7 @@ import itertools
 import pytest
 
 import bilby_cython
+
 bilby_cython.set_backend("jax")
 import numpy as np
 from bilby.gw.detector import get_empty_interferometer, InterferometerList
@@ -32,7 +33,9 @@ def test_time_delay(backend):
         detectors = [ifo.vertex for ifo in ifos]
         for point in np.random.uniform(0, np.pi / 2, (1000, 3)):
             numpy_delay = time_delay_geocentric(*detectors, *point)
-            cython_delay = bilby_cython.geometry.time_delay_geocentric(*detectors, *point)
+            cython_delay = bilby_cython.geometry.time_delay_geocentric(
+                *detectors, *point
+            )
             max_diff = max(max_diff, abs(numpy_delay - cython_delay))
     assert max_diff < 1e-6
 
@@ -44,8 +47,12 @@ def test_time_delay_from_geocenter_matches_time_delay_geocentric(backend):
     for ifo in IFOS:
         detector = get_empty_interferometer(ifo).vertex
         for point in np.random.uniform(0, np.pi / 2, (1000, 3)):
-            geocentric = bilby_cython.geometry.time_delay_geocentric(detector, geocenter, *point)
-            from_geocenter = bilby_cython.geometry.time_delay_from_geocenter(detector, *point)
+            geocentric = bilby_cython.geometry.time_delay_geocentric(
+                detector, geocenter, *point
+            )
+            from_geocenter = bilby_cython.geometry.time_delay_from_geocenter(
+                detector, *point
+            )
             assert from_geocenter == geocentric
 
 
@@ -70,7 +77,9 @@ def test_get_polarization_tensor_multiple_modes(backend):
     for ra, dec, time, psi in np.random.uniform(0, np.pi / 2, (100, 4)):
         args = (ra, dec, time, psi, modes)
         numpy_tensors = get_polarization_tensor_multiple_modes(*args)
-        cython_tensors = bilby_cython.geometry.get_polarization_tensor_multiple_modes(*args)
+        cython_tensors = bilby_cython.geometry.get_polarization_tensor_multiple_modes(
+            *args
+        )
         max_diff = abs(np.max(np.array(numpy_tensors) - np.array(cython_tensors)))
     assert max_diff < 1e-8
 
@@ -79,7 +88,9 @@ def test_get_polarization_tensor_multiple_modes(backend):
 def test_polarization_tensor_bad_mode_raises_error(backend):
     bilby_cython.set_backend(backend)
     with pytest.raises(ValueError):
-        _ = bilby_cython.geometry.get_polarization_tensor(0.0, 0.0, 0.0, 0.0, "bad_mode")
+        _ = bilby_cython.geometry.get_polarization_tensor(
+            0.0, 0.0, 0.0, 0.0, "bad_mode"
+        )
 
 
 @pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
@@ -110,11 +121,15 @@ def test_frame_conversion(backend):
         # lying in specific quadrants for arctan2 due to using arctan
         # the direct tests of the rotation matrix are more rigorous
         sign_incorrect = abs(np.arctan2(delta_x[1], delta_x[0])) < np.pi / 2
-        delta_x *= (-1)**sign_incorrect
+        delta_x *= (-1) ** sign_incorrect
         for point in np.random.uniform(0, np.pi / 2, (100, 2)):
             numpy_result = zenith_azimuth_to_theta_phi(*point, delta_x)
-            cython_result = bilby_cython.geometry.zenith_azimuth_to_theta_phi(*point, delta_x)
-            max_diff = max(max_diff, np.max(abs(np.array(numpy_result) - np.array(cython_result))))
+            cython_result = bilby_cython.geometry.zenith_azimuth_to_theta_phi(
+                *point, delta_x
+            )
+            max_diff = max(
+                max_diff, np.max(abs(np.array(numpy_result) - np.array(cython_result)))
+            )
     assert max_diff < 1e-6
 
 
@@ -124,9 +139,12 @@ def test_calculate_arm(backend):
     max_diff = 0
     for point in np.random.uniform(0, 2 * np.pi, (1000, 4)):
         print(bilby_cython.geometry.calculate_arm(*point), calculate_arm(*point))
-        max_diff = max(max_diff, np.linalg.norm(
-            bilby_cython.geometry.calculate_arm(*point) - calculate_arm(*point)
-        ))
+        max_diff = max(
+            max_diff,
+            np.linalg.norm(
+                bilby_cython.geometry.calculate_arm(*point) - calculate_arm(*point)
+            ),
+        )
     assert max_diff < 1e-10
 
 
@@ -134,7 +152,9 @@ def test_calculate_arm(backend):
 def test_detector_tensor(backend):
     bilby_cython.set_backend(backend)
     for xx, yy in np.random.uniform(0, 1, (1000, 2, 3)):
-        numpy_tensor = 0.5 * (np.einsum('i,j->ij', xx, xx) - np.einsum('i,j->ij', yy, yy))
+        numpy_tensor = 0.5 * (
+            np.einsum("i,j->ij", xx, xx) - np.einsum("i,j->ij", yy, yy)
+        )
         cython_tensor = bilby_cython.geometry.detector_tensor(xx, yy)
         assert np.max(np.abs(numpy_tensor - cython_tensor)) < 1e-6
 

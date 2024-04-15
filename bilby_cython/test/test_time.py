@@ -52,7 +52,7 @@ def test_gmt(backend):
 def test_current_time(backend):
     """
     Test that the current GMST matches LAL and Astropy.
-    This should ensure robustness against additional leap seconds being added. 
+    This should ensure robustness against additional leap seconds being added.
     """
     bilby_cython.set_backend(backend)
     now = float(lal.GPSTimeNow())
@@ -70,6 +70,7 @@ def test_datetime_repr():
     bilby_cython.set_backend("jax")
     from datetime import datetime as reference
     from bilby_cython.time import datetime as test
+
     assert (
         reference(2021, 3, 1, 11, 23, 5).strftime("%Y-%-m-%-d %-H:%-M:%-S")
         == test(2021, 3, 1, 11, 23, 5).__repr__()

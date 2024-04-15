@@ -44,18 +44,30 @@ def calculate_arm(arm_tilt, arm_azimuth, longitude, latitude):
     Returns
     -------
     output: array_like
-        The unit-vector pointing along the interferometer arm 
+        The unit-vector pointing along the interferometer arm
 
     """
     e_long = np.array([-np.sin(longitude), np.cos(longitude), longitude * 0])
-    e_lat = np.array([-np.sin(latitude) * np.cos(longitude),
-                      -np.sin(latitude) * np.sin(longitude), np.cos(latitude)])
-    e_h = np.array([np.cos(latitude) * np.cos(longitude),
-                    np.cos(latitude) * np.sin(longitude), np.sin(latitude)])
+    e_lat = np.array(
+        [
+            -np.sin(latitude) * np.cos(longitude),
+            -np.sin(latitude) * np.sin(longitude),
+            np.cos(latitude),
+        ]
+    )
+    e_h = np.array(
+        [
+            np.cos(latitude) * np.cos(longitude),
+            np.cos(latitude) * np.sin(longitude),
+            np.sin(latitude),
+        ]
+    )
 
-    return (np.cos(arm_tilt) * np.cos(arm_azimuth) * e_long +
-            np.cos(arm_tilt) * np.sin(arm_azimuth) * e_lat +
-            np.sin(arm_tilt) * e_h)
+    return (
+        np.cos(arm_tilt) * np.cos(arm_azimuth) * e_long
+        + np.cos(arm_tilt) * np.sin(arm_azimuth) * e_lat
+        + np.sin(arm_tilt) * e_h
+    )
 
 
 @jit
@@ -100,30 +112,37 @@ def get_polarization_tensor(ra, dec, time, psi, mode):
 
     """
     from functools import partial
+
     gmst = greenwich_mean_sidereal_time(time) % (2 * np.pi)
     phi = ra - gmst
     theta = np.atleast_1d(np.pi / 2 - dec).squeeze()
-    u = np.array([np.cos(phi) * np.cos(theta), np.cos(theta) * np.sin(phi), -np.sin(theta) * phi**0])
+    u = np.array(
+        [
+            np.cos(phi) * np.cos(theta),
+            np.cos(theta) * np.sin(phi),
+            -np.sin(theta) * phi**0,
+        ]
+    )
     v = np.array([-np.sin(phi), np.cos(phi), phi * 0])
     m = -u * np.sin(psi) - v * np.cos(psi)
     n = -u * np.cos(psi) + v * np.sin(psi)
     einsum_shape = "i...,j...->ij..."
     product = partial(np.einsum, einsum_shape)
 
-    if mode.lower() == 'plus':
+    if mode.lower() == "plus":
         return product(m, m) - product(n, n)
-    elif mode.lower() == 'cross':
+    elif mode.lower() == "cross":
         return product(m, n) + product(n, m)
-    elif mode.lower() == 'breathing':
+    elif mode.lower() == "breathing":
         return product(m, m) + product(n, n)
 
     # Calculating omega here to avoid calculation when model in [plus, cross, breathing]
     omega = np.cross(m, n, axis=0)
-    if mode.lower() == 'longitudinal':
+    if mode.lower() == "longitudinal":
         return product(omega, omega)
-    elif mode.lower() == 'x':
+    elif mode.lower() == "x":
         return product(m, omega) + product(omega, m)
-    elif mode.lower() == 'y':
+    elif mode.lower() == "y":
         return product(n, omega) + product(omega, n)
     else:
         raise ValueError(f"{mode} not a polarization mode!")
@@ -183,21 +202,30 @@ def rotation_matrix_from_delta(delta_x):
         aligned with the z-axis to the target frame.
     """
     delta_x /= np.linalg.norm(delta_x)
-    alpha = np.arctan2(- delta_x[1] * delta_x[2], delta_x[0])
+    alpha = np.arctan2(-delta_x[1] * delta_x[2], delta_x[0])
     beta = np.arccos(delta_x[2])
     gamma = np.arctan2(delta_x[1], delta_x[0])
-    rotation_1 = np.array([
-        [np.cos(alpha), -np.sin(alpha), np.zeros(alpha.shape)],
-        [np.sin(alpha), np.cos(alpha), np.zeros(alpha.shape)],
-        [np.zeros(alpha.shape), np.zeros(alpha.shape), np.ones(alpha.shape)]])
-    rotation_2 = np.array([
-        [np.cos(beta), np.zeros(beta.shape), - np.sin(beta)],
-        [np.zeros(beta.shape), np.ones(beta.shape), np.zeros(beta.shape)],
-        [np.sin(beta), np.zeros(beta.shape), np.cos(beta)]]).T
-    rotation_3 = np.array([
-        [np.cos(gamma), -np.sin(gamma), np.zeros(gamma.shape)],
-        [np.sin(gamma), np.cos(gamma), np.zeros(gamma.shape)],
-        [np.zeros(gamma.shape), np.zeros(gamma.shape), np.ones(gamma.shape)]])
+    rotation_1 = np.array(
+        [
+            [np.cos(alpha), -np.sin(alpha), np.zeros(alpha.shape)],
+            [np.sin(alpha), np.cos(alpha), np.zeros(alpha.shape)],
+            [np.zeros(alpha.shape), np.zeros(alpha.shape), np.ones(alpha.shape)],
+        ]
+    )
+    rotation_2 = np.array(
+        [
+            [np.cos(beta), np.zeros(beta.shape), -np.sin(beta)],
+            [np.zeros(beta.shape), np.ones(beta.shape), np.zeros(beta.shape)],
+            [np.sin(beta), np.zeros(beta.shape), np.cos(beta)],
+        ]
+    ).T
+    rotation_3 = np.array(
+        [
+            [np.cos(gamma), -np.sin(gamma), np.zeros(gamma.shape)],
+            [np.sin(gamma), np.cos(gamma), np.zeros(gamma.shape)],
+            [np.zeros(gamma.shape), np.zeros(gamma.shape), np.ones(gamma.shape)],
+        ]
+    )
     return rotation_3 @ rotation_2 @ rotation_1
 
 
@@ -217,7 +245,7 @@ def three_by_three_matrix_contraction(tensor1, tensor2):
     =======
     array_like: The contraction of tensor1 and tensor2
     """
-    return np.einsum('ij,ij', tensor1, tensor2)
+    return np.einsum("ij,ij", tensor1, tensor2)
 
 
 @jit
@@ -275,7 +303,9 @@ def time_delay_geocentric(detector1, detector2, ra, dec, time):
     speed_of_light = 299792458.0
     phi = ra - gmst
     theta = np.pi / 2 - dec
-    omega = np.array([np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)])
+    omega = np.array(
+        [np.sin(theta) * np.cos(phi), np.sin(theta) * np.sin(phi), np.cos(theta)]
+    )
     delta_d = detector2 - detector1
     return np.dot(omega, delta_d) / speed_of_light
 
@@ -299,10 +329,13 @@ def zenith_azimuth_to_theta_phi(zenith, azimuth, delta_x):
     theta, phi: float
         The zenith and azimuthal angles in the earth frame.
     """
-    omega_prime = np.array([
-        np.sin(zenith) * np.cos(azimuth),
-        np.sin(zenith) * np.sin(azimuth),
-        np.cos(zenith)])
+    omega_prime = np.array(
+        [
+            np.sin(zenith) * np.cos(azimuth),
+            np.sin(zenith) * np.sin(azimuth),
+            np.cos(zenith),
+        ]
+    )
     rotation_matrix = rotation_matrix_from_delta(delta_x)
     omega = np.dot(rotation_matrix, omega_prime)
     theta = np.arccos(omega[2])

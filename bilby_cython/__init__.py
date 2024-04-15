@@ -1,4 +1,5 @@
 from ._version import __version__
+from . import geometry, time
 
 BACKEND = "cython"
 SUPPORTED_BACKENDS = ["cython", "jax"]
@@ -15,18 +16,14 @@ def set_backend(backend: str) -> None:
     global BACKEND
     if backend == "jax":
         from jax import config
+
         config.update("jax_enable_x64", True)
     if backend not in SUPPORTED_BACKENDS:
-        raise ValueError(f"Backend {backend} not supported, must be one of {SUPPORTED_BACKENDS}")
+        raise ValueError(
+            f"Backend {backend} not supported, must be one of {SUPPORTED_BACKENDS}"
+        )
     else:
         BACKEND = backend
 
 
-def __getattr__(name: str) -> object:
-    if name in ["geometry", "time"]:
-        import importlib
-        return importlib.import_module(f"bilby_cython.{BACKEND}.{name}")
-    elif name == "__version__":
-        return __version__
-    else:
-        raise AttributeError(f"module {__name__} has no attribute {name} for backend {BACKEND}")
+set_backend(BACKEND)
