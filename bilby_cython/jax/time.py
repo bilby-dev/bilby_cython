@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from jax import jit
 
 __all__ = [
     "gps_time_to_utc",
@@ -122,6 +123,7 @@ def utc_to_julian_day(time):
     return time.julian_day
 
 
+@jit
 def greenwich_mean_sidereal_time(gps_time):
     """
     Compute the Greenwich mean sidereal time from the GPS time.
@@ -134,6 +136,7 @@ def greenwich_mean_sidereal_time(gps_time):
     return greenwich_sidereal_time(gps_time, 0)
 
 
+@jit
 def greenwich_sidereal_time(gps_time, equation_of_equinoxes):
     """
     Compute the Greenwich mean sidereal time from the GPS time and equation of

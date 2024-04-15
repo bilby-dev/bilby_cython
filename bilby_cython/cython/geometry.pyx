@@ -207,7 +207,12 @@ cpdef get_polarization_tensor(double ra, double dec, double time, double psi, st
     return output
 
 
-cpdef get_polarization_tensor_multiple_modes(double ra, double dec, double time, double psi, list modes):
+ctypedef fused list_or_tuple:
+    list
+    tuple
+
+
+cpdef get_polarization_tensor_multiple_modes(double ra, double dec, double time, double psi, list_or_tuple modes):
     """
     Calculate the polarization tensor for a given sky location and time with
     multiple modes
@@ -367,6 +372,34 @@ cpdef detector_tensor(np.ndarray x, np.ndarray y):
     return output
 
 
+def antenna_response(detector_tensor, ra, dec, time, psi, mode):
+    """
+    Compute the antenna response for a given detector tensor and sky location.
+
+    Parameters
+    ----------
+    detector_tensor: array_like
+        The detector tensor
+    ra: float
+        The right ascension of the source
+    dec: float
+        The declination of the source
+    time: float
+        The GPS time
+    psi: float
+        The binary polarisation angle
+    mode: str
+        The polarisation mode
+
+    Returns
+    -------
+    output: float
+        The antenna response
+
+    """
+    polarization_tensor = get_polarization_tensor(ra, dec, time, psi, mode)
+    return three_by_three_matrix_contraction(detector_tensor, polarization_tensor)
+
 
 cpdef calculate_arm(double arm_tilt, double arm_azimuth, double longitude, double latitude):
     """
@@ -499,19 +532,16 @@ cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delt
     theta, phi: float
         The zenith and azimuthal angles in the earth frame.
     """
-    rotation = np.empty((3, 3))
     cdef double sin_azimuth, cos_azimuth
     cdef double sin_zenith, cos_zenith
-    cdef double[:] delta_
-    cdef double[:, :] rotation_
     sin_azimuth = sin(azimuth)
     cos_azimuth = cos(azimuth)
     sin_zenith = sin(zenith)
     cos_zenith = cos(zenith)
 
-    delta_ = delta_x
+    rotation = rotation_matrix_from_delta(delta_x)
+    cdef double[:, :] rotation_
     rotation_ = rotation
-    euler_rotation(delta_, rotation_)
 
     theta = acos(
         rotation_[2][0] * sin_zenith * cos_azimuth
