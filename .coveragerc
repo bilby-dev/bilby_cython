@@ -2,5 +2,5 @@
 show_missing = true
 
 [run]
-omit = bilby_cython/test/*
+omit = bilby_cython/test/*,bilby_cython/_version.py
 plugins = Cython.Coverage
