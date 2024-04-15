@@ -1,7 +1,9 @@
-from ._version import __version__
-from . import geometry, time
+import os
 
-BACKEND = "cython"
+from ._version import __version__
+from . import geometry, time  # noqa
+
+BACKEND = os.environ.get("BILBY_ARRAY_DEFAULT_BACKEND", "cython")
 SUPPORTED_BACKENDS = ["cython", "jax"]
 
 
