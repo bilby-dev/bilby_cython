@@ -98,7 +98,9 @@ def test_antenna_reponse(backend):
     bilby_cython.set_backend(backend)
     max_diff = 0
     for ifo in IFOS:
-        detector = get_empty_interferometer(ifo).geometry.detector_tensor
+        # we have to explicitly cast to numpy as rapid switching breaks cases
+        # where functions have been imported previously
+        detector = np.array(get_empty_interferometer(ifo).geometry.detector_tensor)
         for ra, dec, time, psi in np.random.uniform(0, np.pi / 2, (100, 4)):
             for mode in MODES:
                 args = (ra, dec, time, psi, mode)
