@@ -19,6 +19,7 @@ class datetime:
     """
     A barebones datetime class for use in the GPS to GMST conversion.
     """
+
     def __init__(
         self,
         year: int = 0,
@@ -34,7 +35,7 @@ class datetime:
         self.hour = hour
         self.minute = minute
         self.second = second
-    
+
     def __repr__(self):
         return f"{self.year}-{self.month}-{self.day} {self.hour}:{self.minute}:{self.second}"
 
@@ -66,26 +67,28 @@ class datetime:
 
 
 GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
-LEAP_SECONDS = jnp.asarray([
-    46828800,
-    78364801,
-    109900802,
-    173059203,
-    252028804,
-    315187205,
-    346723206,
-    393984007,
-    425520008,
-    457056009,
-    504489610,
-    551750411,
-    599184012,
-    820108813,
-    914803214,
-    1025136015,
-    1119744016,
-    1167264017,
-])
+LEAP_SECONDS = jnp.asarray(
+    [
+        46828800,
+        78364801,
+        109900802,
+        173059203,
+        252028804,
+        315187205,
+        346723206,
+        393984007,
+        425520008,
+        457056009,
+        504489610,
+        551750411,
+        599184012,
+        820108813,
+        914803214,
+        1025136015,
+        1119744016,
+        1167264017,
+    ]
+)
 
 
 def n_leap_seconds(date):
@@ -157,7 +160,9 @@ def greenwich_sidereal_time(gps_time, equation_of_equinoxes):
 
     t = t_hi + t_lo
 
-    sidereal_time = equation_of_equinoxes + (-6.2e-6 * t + 0.093104) * t**2 + 67310.54841
+    sidereal_time = (
+        equation_of_equinoxes + (-6.2e-6 * t + 0.093104) * t**2 + 67310.54841
+    )
     sidereal_time += 8640184.812866 * t_lo
     sidereal_time += 3155760000.0 * t_lo
     sidereal_time += 8640184.812866 * t_hi
