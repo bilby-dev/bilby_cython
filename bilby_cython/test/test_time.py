@@ -13,9 +13,7 @@ EPSILON = dict(
 )
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_gmst(backend):
-    bilby_cython.set_backend(backend)
     times = np.random.uniform(1325623903, 1345623903, 100000)
     diffs = list()
     for tt in times:
@@ -34,9 +32,7 @@ def test_gmst_vectorized(backend):
     assert max(np.abs(cy_gmst - lal_gmst)) < 1e-10
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_gmt(backend):
-    bilby_cython.set_backend(backend)
     times = np.random.uniform(1325623903, 1345623903, 100000)
     equinoxes = np.random.uniform(0, 2 * np.pi, 100000)
     diffs = list()
@@ -48,13 +44,11 @@ def test_gmt(backend):
     assert max(np.abs(diffs)) < EPSILON[backend]
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_current_time(backend):
     """
     Test that the current GMST matches LAL and Astropy.
     This should ensure robustness against additional leap seconds being added.
     """
-    bilby_cython.set_backend(backend)
     now = float(lal.GPSTimeNow())
     lal_now = lal.GreenwichMeanSiderealTime(now) % (2 * np.pi)
     cython_now = bilby_cython.time.greenwich_mean_sidereal_time(now) % (2 * np.pi)
