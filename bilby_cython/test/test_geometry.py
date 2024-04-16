@@ -2,12 +2,8 @@ import itertools
 import pytest
 
 import bilby_cython
-
-bilby_cython.set_backend("jax")
 import numpy as np
 from bilby.gw.detector import get_empty_interferometer, InterferometerList
-
-# from bilby_cython import geometry
 
 from .old_code import (
     antenna_response,
@@ -22,9 +18,7 @@ IFOS = ["H1", "L1", "V1", "K1"]
 MODES = ["plus", "cross", "x", "y", "breathing", "longitudinal"]
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_time_delay(backend):
-    bilby_cython.set_backend(backend)
     max_diff = 0
     for ifo_pair in itertools.product(IFOS, repeat=2):
         if ifo_pair[0] == ifo_pair[1]:
@@ -40,9 +34,7 @@ def test_time_delay(backend):
     assert max_diff < 1e-6
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_time_delay_from_geocenter_matches_time_delay_geocentric(backend):
-    bilby_cython.set_backend(backend)
     geocenter = np.zeros(3)
     for ifo in IFOS:
         detector = get_empty_interferometer(ifo).vertex
@@ -56,9 +48,7 @@ def test_time_delay_from_geocenter_matches_time_delay_geocentric(backend):
             assert from_geocenter == geocentric
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_get_polarization_tensor(backend):
-    bilby_cython.set_backend(backend)
     max_diff = 0
     for ra, dec, time, psi in np.random.uniform(0, np.pi / 2, (100, 4)):
         for mode in MODES:
@@ -69,9 +59,7 @@ def test_get_polarization_tensor(backend):
     assert max_diff < 1e-8
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_get_polarization_tensor_multiple_modes(backend):
-    bilby_cython.set_backend(backend)
     modes = tuple(MODES)
     max_diff = 0
     for ra, dec, time, psi in np.random.uniform(0, np.pi / 2, (100, 4)):
@@ -84,18 +72,14 @@ def test_get_polarization_tensor_multiple_modes(backend):
     assert max_diff < 1e-8
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_polarization_tensor_bad_mode_raises_error(backend):
-    bilby_cython.set_backend(backend)
     with pytest.raises(ValueError):
         _ = bilby_cython.geometry.get_polarization_tensor(
             0.0, 0.0, 0.0, 0.0, "bad_mode"
         )
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_antenna_reponse(backend):
-    bilby_cython.set_backend(backend)
     max_diff = 0
     for ifo in IFOS:
         # we have to explicitly cast to numpy as rapid switching breaks cases
@@ -110,9 +94,7 @@ def test_antenna_reponse(backend):
     assert max_diff < 1e-7
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_frame_conversion(backend):
-    bilby_cython.set_backend(backend)
     max_diff = 0
     for ifo_pair in itertools.product(IFOS, repeat=2):
         if ifo_pair[0] == ifo_pair[1]:
@@ -135,9 +117,7 @@ def test_frame_conversion(backend):
     assert max_diff < 1e-6
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_calculate_arm(backend):
-    bilby_cython.set_backend(backend)
     max_diff = 0
     for point in np.random.uniform(0, 2 * np.pi, (1000, 4)):
         print(bilby_cython.geometry.calculate_arm(*point), calculate_arm(*point))
@@ -150,9 +130,7 @@ def test_calculate_arm(backend):
     assert max_diff < 1e-10
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_detector_tensor(backend):
-    bilby_cython.set_backend(backend)
     for xx, yy in np.random.uniform(0, 1, (1000, 2, 3)):
         numpy_tensor = 0.5 * (
             np.einsum("i,j->ij", xx, xx) - np.einsum("i,j->ij", yy, yy)
@@ -161,17 +139,13 @@ def test_detector_tensor(backend):
         assert np.max(np.abs(numpy_tensor - cython_tensor)) < 1e-6
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_rotation_matrix_transpose_is_inverse(backend):
-    bilby_cython.set_backend(backend)
     for delta_x in np.random.uniform(0, 1, (100, 3)):
         rotation = bilby_cython.geometry.rotation_matrix_from_delta(delta_x)
         assert np.max(np.abs((rotation.T @ rotation - np.eye(3)))) < 1e-10
 
 
-@pytest.mark.parametrize("backend", bilby_cython.SUPPORTED_BACKENDS)
 def test_rotation_matrix_maps_delta_x_to_z_axis(backend):
-    bilby_cython.set_backend(backend)
     for delta_x in np.random.uniform(0, 1, (100, 3)):
         rotation = bilby_cython.geometry.rotation_matrix_from_delta(delta_x)
         delta_x /= np.linalg.norm(delta_x)
