@@ -27,9 +27,9 @@ def test_gmst(backend):
 def test_gmst_vectorized(backend):
     times = np.random.uniform(1325623903, 1345623903, 100000)
     diffs = list()
-    cy_gmst = greenwich_mean_sidereal_time(times)
+    cy_gmst = bilby_cython.time.greenwich_mean_sidereal_time(times)
     lal_gmst = np.array([lal.GreenwichMeanSiderealTime(tt) for tt in times])
-    assert max(np.abs(cy_gmst - lal_gmst)) < 1e-10
+    assert max(np.abs(cy_gmst - lal_gmst)) < EPSILON[backend]
 
 
 def test_gmt(backend):
