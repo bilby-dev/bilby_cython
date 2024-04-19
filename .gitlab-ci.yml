@@ -35,7 +35,7 @@ unit-tests:
   stage: test
   parallel:
     matrix:
-      - PY_VERSION: [ "3.8", "3.9", "3.10", "3.11" ]
+      - PY_VERSION: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
   image: $IMAGE_ROOT:$PY_VERSION
   before_script:
     - python -m pip install --upgrade pip setuptools
@@ -111,7 +111,7 @@ pages:
   stage: wheels
   parallel:
     matrix:
-      - PY_VERSION: [ "38", "39", "310", "311" ]
+      - PY_VERSION: [ "38", "39", "310", "311", "312" ]
   except:
     variables:
       # allow these jobs to be skipped by including
@@ -163,7 +163,7 @@ wheel:macosx:
 wheel:manylinux2014:
   extends:
     - .wheel:manylinux
-  image: containers.ligo.org/lscsoft/lalsuite-manylinux/manylinux2014_x86_64
+  image: quay.io/pypa/manylinux2014_x86_64
 
 build-dist:
   stage: wheels
