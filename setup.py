@@ -27,7 +27,7 @@ class LazyImportBuildExtCmd(build_ext):
             compiler_directives=compiler_directives,
             annotate=annotate,
         )
-        super(LazyImportBuildExtCmd, self).finalize_options()
+        super().finalize_options()
 
 
 if os.environ.get("CYTHON_COVERAGE"):
@@ -39,17 +39,12 @@ else:
     macros = list()
 extensions = [
     Extension(
-        "bilby_cython.geometry",
-        ["bilby_cython/geometry.pyx"],
+        f"bilby_cython.cython.{module}",
+        [f"bilby_cython/cython/{module}.pyx"],
         include_dirs=[np.get_include()],
         define_macros=macros,
-    ),
-    Extension(
-        "bilby_cython.time",
-        ["bilby_cython/time.pyx"],
-        include_dirs=[np.get_include()],
-        define_macros=macros,
-    ),
+    )
+    for module in ["geometry", "time"]
 ]
 
 setup(

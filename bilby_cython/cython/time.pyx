@@ -35,6 +35,14 @@ ctypedef fused real:
     float
     double
 
+__all__ = [
+    'gps_time_to_utc',
+    'greenwich_mean_sidereal_time',
+    'greenwich_sidereal_time',
+    'n_leap_seconds',
+    'utc_to_julian_day',
+]
+
 
 @cython.ufunc
 cdef int n_leap_seconds(real date):
@@ -97,7 +105,7 @@ cdef double utc_to_julian_day(datetime time):
 
 
 @cython.ufunc
-cdef greenwich_mean_sidereal_time(real gps_time):
+cdef double greenwich_mean_sidereal_time(real gps_time):
     """
     Compute the Greenwich mean sidereal time from the GPS time.
 
@@ -110,7 +118,7 @@ cdef greenwich_mean_sidereal_time(real gps_time):
 
 
 @cython.ufunc
-cdef greenwich_sidereal_time(real gps_time, real equation_of_equinoxes):
+cdef double greenwich_sidereal_time(real gps_time, real equation_of_equinoxes):
     """
     Compute the Greenwich mean sidereal time from the GPS time and equation of
     equinoxes.

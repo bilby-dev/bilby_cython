@@ -43,6 +43,7 @@ unit-tests:
     - python -m pip install pytest-cov
     - python -m pip install bilby
     - python -m pip install lalsuite astropy
+    - python -m pip install jax[cpu]
   script:
     - export CYTHON_COVERAGE=1
     - *install-local
