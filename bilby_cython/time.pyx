@@ -34,6 +34,7 @@ ctypedef fused real:
     long
     float
     double
+    long double
 
 
 @cython.ufunc
@@ -66,7 +67,7 @@ cdef datetime gps_time_to_utc(real secs):
         The time to convert in GPS time.
     """
     cdef datetime date_before_leaps
-    date_before_leaps = GPS_EPOCH + timedelta(seconds=secs - n_leap_seconds(int(secs)))
+    date_before_leaps = GPS_EPOCH + timedelta(seconds=<double>secs - n_leap_seconds(secs))
     return date_before_leaps
 
 
@@ -97,7 +98,7 @@ cdef double utc_to_julian_day(datetime time):
 
 
 @cython.ufunc
-cdef greenwich_mean_sidereal_time(real gps_time):
+cdef double greenwich_mean_sidereal_time(real gps_time):
     """
     Compute the Greenwich mean sidereal time from the GPS time.
 
@@ -110,7 +111,7 @@ cdef greenwich_mean_sidereal_time(real gps_time):
 
 
 @cython.ufunc
-cdef greenwich_sidereal_time(real gps_time, real equation_of_equinoxes):
+cdef double greenwich_sidereal_time(real gps_time, real equation_of_equinoxes):
     """
     Compute the Greenwich mean sidereal time from the GPS time and equation of
     equinoxes.
@@ -125,7 +126,7 @@ cdef greenwich_sidereal_time(real gps_time, real equation_of_equinoxes):
         The equation of equinoxes
     """
     cdef double julian_day, t_hi, t_lo, t, sidereal_time
-    julian_day = utc_to_julian_day(gps_time_to_utc(gps_time // 1))
+    julian_day = utc_to_julian_day(gps_time_to_utc(gps_time))
     t_hi = (julian_day - EPOCH_J2000_0_JD) / 36525.0
     t_lo = (gps_time % 1) / (36525.0 * 86400.0)
 
