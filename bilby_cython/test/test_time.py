@@ -6,11 +6,24 @@ from astropy.time import Time
 from bilby_cython.time import (
     greenwich_sidereal_time,
     greenwich_mean_sidereal_time,
+    gps_time_to_utc,
+    utc_to_julian_day,
 )
 
 
-def test_gmst():
-    times = np.random.uniform(1325623903, 1345623903, 100000)
+def test_gps_time_to_julian_day(types):
+    times = np.random.uniform(1325623903, 1345623903, 100000).astype(types)
+    diffs = list()
+    for tt in times:
+        diffs.append(
+            utc_to_julian_day(gps_time_to_utc(tt))
+            - lal.JulianDay(lal.GPSToUTC(int(tt)))
+        )
+    assert max(np.abs(diffs)) < 1e-10
+
+
+def test_gmst(types):
+    times = np.random.uniform(1325623903, 1345623903, 100000).astype(types)
     diffs = list()
     for tt in times:
         diffs.append(
@@ -20,16 +33,16 @@ def test_gmst():
     assert max(np.abs(diffs)) < 1e-10
 
 
-def test_gmst_vectorized():
-    times = np.random.uniform(1325623903, 1345623903, 100000)
+def test_gmst_vectorized(types):
+    times = np.random.uniform(1325623903, 1345623903, 100000).astype(types)
     diffs = list()
     cy_gmst = greenwich_mean_sidereal_time(times)
     lal_gmst = np.array([lal.GreenwichMeanSiderealTime(tt) for tt in times])
     assert max(np.abs(cy_gmst - lal_gmst)) < 1e-10
 
 
-def test_gmt():
-    times = np.random.uniform(1325623903, 1345623903, 100000)
+def test_gmt(types):
+    times = np.random.uniform(1325623903, 1345623903, 100000).astype(types)
     equinoxes = np.random.uniform(0, 2 * np.pi, 100000)
     diffs = list()
     for tt, eq in zip(times, equinoxes):
