@@ -5,7 +5,7 @@ stages:
   - deploy
 
 variables:
-  PRIMARY_VERSION: "3.9"
+  PRIMARY_VERSION: "3.11"
   IMAGE_ROOT: "python"
   PRIMARY_IMAGE: $IMAGE_ROOT:$PRIMARY_VERSION
 
@@ -35,7 +35,7 @@ unit-tests:
   stage: test
   parallel:
     matrix:
-      - PY_VERSION: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+      - PY_VERSION: [ "3.9", "3.10", "3.11", "3.12" ]
   image: $IMAGE_ROOT:$PY_VERSION
   before_script:
     - python -m pip install --upgrade pip setuptools
@@ -111,7 +111,7 @@ pages:
   stage: wheels
   parallel:
     matrix:
-      - PY_VERSION: [ "38", "39", "310", "311", "312" ]
+      - PY_VERSION: [ "39", "310", "311", "312" ]
   except:
     variables:
       # allow these jobs to be skipped by including
