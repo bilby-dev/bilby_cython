@@ -96,7 +96,6 @@ cdef double utc_to_julian_day(datetime time):
         - 0.5
     )
 
-
 @cython.ufunc
 cdef double greenwich_mean_sidereal_time(real gps_time):
     """
