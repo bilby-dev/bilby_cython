@@ -1,6 +1,7 @@
 import numpy as np
 from cmath import pi
 from cpython.datetime cimport datetime, timedelta
+cimport cython
 
 cdef datetime GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
 cdef double EPOCH_J2000_0_JD = 2451545.0
@@ -35,8 +36,24 @@ __all__ = [
     'utc_to_julian_day',
 ]
 
+ctypedef fused real:
+    short
+    int
+    long
+    float
+    double
 
-cpdef int n_leap_seconds(int date):
+__all__ = [
+    'gps_time_to_utc',
+    'greenwich_mean_sidereal_time',
+    'greenwich_sidereal_time',
+    'n_leap_seconds',
+    'utc_to_julian_day',
+]
+
+
+@cython.ufunc
+cdef int n_leap_seconds(real date):
     """
     Find the number of leap seconds required for the specified date.
 
@@ -51,7 +68,8 @@ cpdef int n_leap_seconds(int date):
     return n_leaps
 
 
-cpdef datetime gps_time_to_utc(double secs):
+@cython.ufunc
+cdef datetime gps_time_to_utc(real secs):
     """
     Convert from GPS time to UTC, this is a necessary intermediate step in
     converting from GPS to GMST.
@@ -68,7 +86,8 @@ cpdef datetime gps_time_to_utc(double secs):
     return date_before_leaps
 
 
-cpdef double utc_to_julian_day(datetime time):
+@cython.ufunc
+cdef double utc_to_julian_day(datetime time):
     """
     Convert from UTC to Julian day, this is a necessary intermediate step in
     converting from GPS to GMST.
@@ -93,7 +112,8 @@ cpdef double utc_to_julian_day(datetime time):
     )
 
 
-cpdef greenwich_mean_sidereal_time(double gps_time):
+@cython.ufunc
+cdef double greenwich_mean_sidereal_time(real gps_time):
     """
     Compute the Greenwich mean sidereal time from the GPS time.
 
@@ -105,7 +125,8 @@ cpdef greenwich_mean_sidereal_time(double gps_time):
     return greenwich_sidereal_time(gps_time, 0)
 
 
-cpdef greenwich_sidereal_time(double gps_time, double equation_of_equinoxes):
+@cython.ufunc
+cdef double greenwich_sidereal_time(real gps_time, real equation_of_equinoxes):
     """
     Compute the Greenwich mean sidereal time from the GPS time and equation of
     equinoxes.
@@ -120,7 +141,7 @@ cpdef greenwich_sidereal_time(double gps_time, double equation_of_equinoxes):
         The equation of equinoxes
     """
     cdef double julian_day, t_hi, t_lo, t, sidereal_time
-    julian_day = utc_to_julian_day(gps_time_to_utc(int(gps_time)))
+    julian_day = utc_to_julian_day(gps_time_to_utc(gps_time // 1))
     t_hi = (julian_day - EPOCH_J2000_0_JD) / 36525.0
     t_lo = (gps_time % 1) / (36525.0 * 86400.0)
 
