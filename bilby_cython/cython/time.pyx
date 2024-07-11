@@ -28,14 +28,6 @@ _LEAP_SECONDS = np.asarray([
 cdef long[:] LEAP_SECONDS = _LEAP_SECONDS
 cdef int NUM_LEAPS = len(_LEAP_SECONDS)
 
-__all__ = [
-    'gps_time_to_utc',
-    'greenwich_mean_sidereal_time',
-    'greenwich_sidereal_time',
-    'n_leap_seconds',
-    'utc_to_julian_day',
-]
-
 ctypedef fused real:
     short
     int
