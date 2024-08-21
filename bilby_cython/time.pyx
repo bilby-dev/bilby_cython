@@ -5,7 +5,7 @@ cimport cython
 
 cdef datetime GPS_EPOCH = datetime(1980, 1, 6, 0, 0, 0)
 cdef double EPOCH_J2000_0_JD = 2451545.0
-cdef long[:] LEAP_SECONDS = [
+cdef long[18] LEAP_SECONDS = [
     46828800,
     78364801,
     109900802,
