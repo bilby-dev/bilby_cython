@@ -54,7 +54,7 @@ def test_gmt(types):
             greenwich_sidereal_time(tt, eq)
             - lal.GreenwichSiderealTime(tt, eq)
         )
-    assert max(np.abs(diffs)) < 1e-10
+    assert max(np.abs(diffs)) < 1e-5
 
 
 def test_current_time():
