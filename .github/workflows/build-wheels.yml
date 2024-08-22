@@ -75,7 +75,7 @@ jobs:
     - name: Run import tests
       run: |
         cd ../
-        python -m pip install pytest
+        python -m pip install pytest lalsuite
         python -m pytest --pyargs bilby_cython.test
         cd -
     - uses: actions/upload-artifact@v3
@@ -104,7 +104,7 @@ jobs:
         python setup.py sdist --verbose
         python -m pip install --debug -vv dist/*
         cd ../
-        python -m pip install pytest
+        python -m pip install pytest lalsuite
         python -m pytest --pyargs bilby_cython.test
         cd -
     - uses: actions/upload-artifact@v3
