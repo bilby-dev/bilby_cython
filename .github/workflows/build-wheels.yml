@@ -11,77 +11,108 @@ on:
     branches: [ main ]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
-      - uses: RalfG/python-wheels-manylinux-build@v0.4.2
+
+      # Used to host cibuildwheel
+      - uses: actions/setup-python@v5
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.20.0
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        # to supply options, put them in 'env', like:
+        # env:
+        #   CIBW_SOME_OPTION: value
+
+      - uses: actions/upload-artifact@v4
         with:
-          python-versions: 'cp39-cp39 cp310-cp310 cp311-cp311'
-          build-requirements: 'cython numpy setuptools_scm'
-          pip-wheel-args: '-v --wheel-dir=wheelhouse --no-deps'
-      - uses: actions/upload-artifact@v3
-        with:
-          name: wheelhouse
-          path: wheelhouse
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
 
-  build-other:
-    runs-on: ${{ matrix.os }}
+# jobs:
+  # build-linux:
+  #   runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #         fetch-tags: true
+  #     - uses: RalfG/python-wheels-manylinux-build@v0.4.2
+  #       with:
+  #         python-versions: 'cp39-cp39 cp310-cp310 cp311-cp311'
+  #         build-requirements: 'cython numpy setuptools_scm'
+  #         pip-wheel-args: '-v --wheel-dir=wheelhouse --no-deps'
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: wheelhouse
+  #         path: wheelhouse
 
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        fetch-tags: true
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip wheel setuptools setuptools_scm
-        python -m pip install cython
-    - name: Build wheel
-      run: |
-        python -m pip wheel -v --wheel-dir=wheel --no-deps .
-    - name: Fix wheel (Mac OS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        python -m pip install delocate
-        delocate-wheel -v -w wheelhouse wheel/bilby.cython*.whl
-        rm -rf wheel/build/
-        cd wheelhouse
-        python -m pip install -v *
-    - name: Fix wheel (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        python -m pip install delvewheel
-        Move-Item wheel wheelhouse
-        cd wheelhouse
-        Get-ChildItem -Path . | ForEach-Object {
-          delvewheel repair -vv --wheel-dir . $_
-          python -m pip install -v $_
-        }
-    - name: Run import tests
-      run: |
-        cd ../
-        python -m pip install pytest lalsuite
-        python -m pytest --pyargs bilby_cython.test
-        cd -
-    - uses: actions/upload-artifact@v3
-      with:
-        name: wheelhouse
-        path: wheelhouse
+  # build-other:
+  #   runs-on: ${{ matrix.os }}
+
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [windows-latest, macos-latest]
+  #       python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #     with:
+  #       fetch-depth: 0
+  #       fetch-tags: true
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v5
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
+  #   - name: Install dependencies
+  #     run: |
+  #       python -m pip install --upgrade pip wheel setuptools setuptools_scm
+  #       python -m pip install cython
+  #   - name: Build wheel
+  #     run: |
+  #       python -m pip wheel -v --wheel-dir=wheel --no-deps .
+  #   - name: Fix wheel (Mac OS)
+  #     if: matrix.os == 'macos-latest'
+  #     run: |
+  #       python -m pip install delocate
+  #       delocate-wheel -v -w wheelhouse wheel/bilby.cython*.whl
+  #       rm -rf wheel/build/
+  #       cd wheelhouse
+  #       python -m pip install -v *
+  #   - name: Fix wheel (Windows)
+  #     if: matrix.os == 'windows-latest'
+  #     run: |
+  #       python -m pip install delvewheel
+  #       Move-Item wheel wheelhouse
+  #       cd wheelhouse
+  #       Get-ChildItem -Path . | ForEach-Object {
+  #         delvewheel repair -vv --wheel-dir . $_
+  #         python -m pip install -v $_
+  #       }
+  #   - name: Run import tests
+  #     run: |
+  #       cd ../
+  #       python -m pip install pytest lalsuite
+  #       python -uc "import bilby_cython; bilby_cython.time.greenwich_mean_sidereal_time(1e9)"
+  #       cd -
+  #   - uses: actions/upload-artifact@v3
+  #     with:
+  #       name: wheelhouse
+  #       path: wheelhouse
 
   build-dist:
 
@@ -104,8 +135,7 @@ jobs:
         python setup.py sdist --verbose
         python -m pip install --debug -vv dist/*
         cd ../
-        python -m pip install pytest lalsuite
-        python -m pytest --pyargs bilby_cython.test
+        python -uc "import bilby_cython; bilby_cython.time.greenwich_mean_sidereal_time(1e9)"
         cd -
     - uses: actions/upload-artifact@v3
       with:
@@ -115,7 +145,7 @@ jobs:
   deploy:
 
     runs-on: ubuntu-latest
-    needs: [ build-linux, build-other, build-dist ]
+    needs: [ build_wheels, build-dist ]
 
     steps:
     - uses: actions/checkout@v4
@@ -133,6 +163,7 @@ jobs:
       with:
         name: dist
         path: dist
+        merge-multiple: true
     - name: Gather artifacts
       run: |
         ls
