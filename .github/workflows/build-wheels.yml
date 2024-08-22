@@ -3,6 +3,10 @@
 
 name: Wheels
 
+env:
+  CIBW_TEST_REQUIRES: numpy
+  CIBW_TEST_COMMAND: "python -uc 'import bilby_cython; bilby_cython.time.greenwich_mean_sidereal_time(1e9)'"
+
 on:
   push:
     branches: [ main ]
