@@ -6,7 +6,7 @@ name: Wheels
 env:
   CIBW_TEST_EXTRAS: test
   CIBW_TEST_COMMAND: 'python -m pytest --pyargs bilby_cython'
-  CIBW_TEST_SKIP: "*-*linux_{aarch64,ppc64le,s390x} cp31{2,3}-macosx* pp3*"
+  CIBW_TEST_SKIP: "*-*linux_{aarch64,ppc64le,s390x} cp312-macosx* pp3* cp313"
 
 on:
   push:
