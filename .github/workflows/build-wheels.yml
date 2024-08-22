@@ -6,7 +6,7 @@ name: Wheels
 env:
   CIBW_TEST_EXTRAS: test
   CIBW_TEST_COMMAND: 'python -m pytest --pyargs bilby_cython'
-  CIBW_TEST_SKIP: "*-*linux_{aarch64,ppc64le,s390x}"
+  CIBW_TEST_SKIP: "*-*linux_{aarch64,ppc64le,s390x} cp31{2,3}-maxosx*"
 
 on:
   push:
@@ -139,8 +139,9 @@ jobs:
       run: |
         python setup.py sdist --verbose
         python -m pip install --debug -vv dist/*
+        pip install bilby.cython[test] --find-links dist --pre
         cd ../
-        python -uc "import bilby_cython; bilby_cython.time.greenwich_mean_sidereal_time(1e9)"
+        python -m pytest --pyargs bilby_cython
         cd -
     - uses: actions/upload-artifact@v3
       with:
