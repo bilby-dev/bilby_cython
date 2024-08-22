@@ -38,7 +38,7 @@ bilby_cython = ["*.pyx"]
 
 [project.optional-dependencies]
 test = [
-    'lalsuite; sys_platform != "win32" and python_version < "3.12"',
+    'lalsuite; sys_platform != "win32" and python_version == "3.11"',
     'astropy; sys_platform != "win32"',
     'bilby; sys_platform != "win32" and python_version >= "3.10"',
     "pytest",
