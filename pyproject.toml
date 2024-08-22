@@ -35,3 +35,11 @@ where = ["."]
 
 [tool.setuptools.package-data]
 bilby_cython = ["*.pyx"]
+
+[project.optional-dependencies]
+test = [
+    "lalsuite; platform_system!='Windows'",
+    "astropy",
+    "bilby",
+    "pytest",
+]
