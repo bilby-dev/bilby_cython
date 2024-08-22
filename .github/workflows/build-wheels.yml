@@ -7,6 +7,7 @@ env:
   CIBW_TEST_EXTRAS: test
   CIBW_TEST_COMMAND: 'python -m pytest --pyargs bilby_cython'
   CIBW_TEST_SKIP: "*-*linux_{aarch64,ppc64le,s390x,i686} cp312-macosx* pp3* cp313*"
+  CIBW_SKIP: "pp*_i686"
 
 on:
   push:
