@@ -6,7 +6,13 @@ from .time import greenwich_mean_sidereal_time
 cdef double CC = 299792458.0
 
 
-cpdef time_delay_geocentric(np.ndarray detector1, np.ndarray detector2, double ra, double dec, double time):
+cpdef time_delay_geocentric(
+    np.ndarray[np.float64_t, ndim=1] detector1,
+    np.ndarray[np.float64_t, ndim=1] detector2,
+    double ra,
+    double dec,
+    double time,
+):
     """
     Calculate time delay between two detectors in geocentric coordinates based on XLALArrivaTimeDiff in TimeDelay.c
 
@@ -53,7 +59,12 @@ cpdef time_delay_geocentric(np.ndarray detector1, np.ndarray detector2, double r
 _GEOCENTER = np.zeros(3, dtype=float)
 
 
-cpdef time_delay_from_geocenter(np.ndarray detector1, double ra, double dec, double time):
+cpdef time_delay_from_geocenter(
+    np.ndarray[np.float64_t, ndim=1] detector1,
+    double ra,
+    double dec,
+    double time,
+):
     """
     Calculate time delay between a detectors and the geocenter
     based on XLALArrivalTimeDiff in TimeDelay.c
@@ -78,7 +89,14 @@ cpdef time_delay_from_geocenter(np.ndarray detector1, double ra, double dec, dou
     return time_delay_geocentric(detector1, _GEOCENTER, ra, dec, time)
 
 
-cdef _vectors_for_polarization_tensor(double phi, double theta, double psi):
+cdef _vectors_for_polarization_tensor(
+    double phi,
+    double theta,
+    double psi,
+    double[:] omega_view,
+    double[:] m_view,
+    double[:] n_view,
+):
     r"""
     Compute the three vectors that can be used to construct the different
     population modes.
@@ -129,27 +147,25 @@ cdef _vectors_for_polarization_tensor(double phi, double theta, double psi):
     omega_view[2] = m_view[0] * n_view[1] - m_view[1] * n_view[0]
 
 
-m = np.zeros(3)
-n = np.zeros(3)
-omega = np.zeros(3)
-cdef double[:] m_view = m
-cdef double[:] n_view = n
-cdef double[:] omega_view = omega
-
-
-cpdef _polarization_tensor(double[:, :] output_view, str mode):
+cpdef _polarization_tensor(
+    double[:, :] output_view,
+    str mode,
+    double[:] omega_view,
+    double[:] m_view,
+    double[:] n_view,
+):
     if mode == 'plus':
-        _plus(output_view)
+        _plus(output_view, m_view, n_view)
     elif mode == 'cross':
-        _cross(output_view)
+        _cross(output_view, m_view, n_view)
     elif mode == 'breathing':
-        _breathing(output_view)
+        _breathing(output_view, m_view, n_view)
     elif mode == 'longitudinal':
-        _longitudinal(output_view)
+        _longitudinal(output_view, omega_view)
     elif mode == 'x':
-        _x(output_view)
+        _x(output_view, omega_view, m_view)
     elif mode == 'y':
-        _y(output_view)
+        _y(output_view, omega_view, n_view)
     else:
         raise ValueError("{} not a polarization mode!".format(mode))
 
@@ -182,15 +198,21 @@ cpdef get_polarization_tensor(double ra, double dec, double time, double psi, st
 
     """
     cdef double gmst, phi, theta
-    output = np.zeros((3, 3))
+    output = np.empty((3, 3))
     cdef double[:, :] output_view = output
+    omega = np.empty(3)
+    m = np.empty(3)
+    n = np.empty(3)
+    cdef double[:] omega_view = omega
+    cdef double[:] m_view = m
+    cdef double[:] n_view = n
 
     gmst = fmod(greenwich_mean_sidereal_time(time), 2 * pi)
     phi = ra - gmst
     theta = pi / 2 - dec
-    _vectors_for_polarization_tensor(phi, theta, psi)
+    _vectors_for_polarization_tensor(phi, theta, psi, omega_view, m_view, n_view)
 
-    _polarization_tensor(output_view, mode)
+    _polarization_tensor(output_view, mode, omega_view, m_view, n_view)
 
     return output
 
@@ -225,22 +247,28 @@ cpdef get_polarization_tensor_multiple_modes(double ra, double dec, double time,
     """
     cdef double gmst, phi, theta
     cdef double[:, :] output_view
+    omega = np.empty(3)
+    m = np.empty(3)
+    n = np.empty(3)
+    cdef double[:] omega_view
+    cdef double[:] m_view
+    cdef double[:] n_view
     output = list()
 
     gmst = fmod(greenwich_mean_sidereal_time(time), 2 * pi)
     phi = ra - gmst
     theta = pi / 2 - dec
-    _vectors_for_polarization_tensor(phi, theta, psi)
+    _vectors_for_polarization_tensor(phi, theta, psi, omega_view, m_view, n_view)
 
     for mode in modes:
         tensor = np.zeros((3, 3))
         output_view = tensor
-        _polarization_tensor(output_view, mode)
+        _polarization_tensor(output_view, mode, omega_view, m_view, n_view)
         output.append(tensor)
     return output
 
 
-cdef _plus(double[:, :] output):
+cdef _plus(double[:, :] output, double[:] m_view, double[:] n_view):
     cdef int ii, jj
 
     for ii in range(3):
@@ -250,7 +278,7 @@ cdef _plus(double[:, :] output):
             output[jj][ii] = output[ii][jj]
 
 
-cdef _breathing(double[:, :] output):
+cdef _breathing(double[:, :] output, double[:] m_view, double[:] n_view):
     cdef int ii, jj
 
     for ii in range(3):
@@ -260,7 +288,7 @@ cdef _breathing(double[:, :] output):
             output[jj][ii] = output[ii][jj]
 
 
-cdef _longitudinal(double[:, :] output):
+cdef _longitudinal(double[:, :] output, double[:] omega_view):
     cdef int ii, jj
 
     for ii in range(3):
@@ -280,19 +308,19 @@ cdef _symmetric_response(double[:, :] output, double[:] input_1, double[:] input
             output[jj][ii] = output[ii][jj]
 
 
-cdef _cross(double[:, :] output):
+cdef _cross(double[:, :] output, double[:] m_view, double[:] n_view):
     _symmetric_response(output, m_view, n_view)
 
 
-cdef _x(double[:, :] output):
+cdef _x(double[:, :] output, double[:] omega_view, double[:] m_view):
     _symmetric_response(output, m_view, omega_view)
 
 
-cdef _y(double[:, :] output):
+cdef _y(double[:, :] output, double[:] omega_view, double[:] n_view):
     _symmetric_response(output, n_view, omega_view)
 
 
-cpdef three_by_three_matrix_contraction(np.ndarray x, np.ndarray y):
+cpdef three_by_three_matrix_contraction(np.ndarray[np.float64_t, ndim=2] x, np.ndarray[np.float64_t, ndim=2] y):
     """
     Doubly contract two 3x3 input matrices following Einstein summation.
     
@@ -323,7 +351,7 @@ cpdef three_by_three_matrix_contraction(np.ndarray x, np.ndarray y):
     return output
 
 
-cpdef detector_tensor(np.ndarray x, np.ndarray y):
+cpdef detector_tensor(np.ndarray[np.float64_t, ndim=1] x, np.ndarray[np.float64_t, ndim=1] y):
     r"""
     Compute the detector tensor given the two unit arm vectors.
     
@@ -469,7 +497,7 @@ cpdef rotation_matrix_from_delta(delta_x):
     return rotation
 
 
-cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray delta_x):
+cpdef zenith_azimuth_to_theta_phi(double zenith, double azimuth, np.ndarray[np.float64_t, ndim=1] delta_x):
     """
     Convert from the 'detector frame' to the Earth frame.
 

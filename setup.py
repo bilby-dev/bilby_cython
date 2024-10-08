@@ -8,6 +8,8 @@ from setuptools.command.build_ext import build_ext
 class LazyImportBuildExtCmd(build_ext):
     def finalize_options(self):
         from Cython.Build import cythonize
+        from Cython.Compiler.Version import version as cython_version
+        from packaging.version import Version
 
         compiler_directives = dict(
             language_level=3,
@@ -22,6 +24,8 @@ class LazyImportBuildExtCmd(build_ext):
             annotate = True
         else:
             annotate = False
+        if Version(cython_version) >= Version("3.1.0a1"):
+            compiler_directives["freethreading_compatible"] = True
         self.distribution.ext_modules = cythonize(
             self.distribution.ext_modules,
             compiler_directives=compiler_directives,
