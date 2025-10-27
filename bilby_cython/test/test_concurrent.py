@@ -1,5 +1,8 @@
 import concurrent.futures
+import sys
+
 import numpy as np
+import pytest
 from bilby_cython import geometry
 
 
@@ -9,6 +12,11 @@ def test_polarization_tensor_threadsafe():
     Previously, this was not thread safe due to the use of global variables
     to store intermediate results.
     """
+    if hasattr(sys, '_is_gil_enabled'):
+        GIL = sys._is_gil_enabled()
+    else:
+        GIL = True
+    pytest.mark.skipif(GIL, "Thread test only works with freethreaded python")
 
     def dummy_func(val):
         return geometry.get_polarization_tensor(*val, "plus")
